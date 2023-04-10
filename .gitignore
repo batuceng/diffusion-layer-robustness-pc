@@ -1,0 +1,3 @@
+data/shapenet.hdf5
+data/modelnet40_c/*
+logs_ae/*
