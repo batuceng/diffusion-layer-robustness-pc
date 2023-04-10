@@ -64,29 +64,31 @@ model.eval()
 layer_dict = {"x1":64, "x2":64, "x3":128, "x4":256, "original":3}
 layer_dim = layer_dict[args.input_type]
 
-class Denoiser(nn.Module):
-    def __init__(self, args, layer_dim):
-        super().__init__()
-        assert args.denoiser_cpkt_path is not None
-        ckpt = torch.load(args.denoiser_cpkt_path)
-        self.diffusion_model =  AutoEncoder(ckpt['args'], layer_dim=layer_dim).cuda()
-        self.diffusion_model.load_state_dict(ckpt['state_dict'])
+# class Denoiser(nn.Module):
+#     def __init__(self, args, layer_dim):
+#         super().__init__()
+#         assert args.denoiser_cpkt_path is not None
+#         ckpt = torch.load(args.denoiser_cpkt_path)
+#         self.diffusion_model =  AutoEncoder(ckpt['args'], layer_dim=layer_dim).cuda()
+#         self.diffusion_model.load_state_dict(ckpt['state_dict'])
         
-    # Do the denoising
-    def forward(self, x, t=5):
-        x = x.transpose(1, 2)
-        code = self.diffusion_model.encode(x)
-        x = self.diffusion_model.denoiser(x, t, context=code)
-        x = x.transpose(1, 2)
-        return x
+#     # Do the denoising
+#     def forward(self, x, t=5):
+#         x = x.transpose(1, 2)
+#         code = self.diffusion_model.encode(x)
+#         x = self.diffusion_model.denoiser(x, t, context=code)
+#         x = x.transpose(1, 2)
+#         return x
 
 class Identity_c(nn.Module):
     def __init__(self):
         super().__init__()
-    def forward(self, x, t=5):
+    def forward(self, x, t=5, layer_name="original"):
+        return x
+    def denoise_layer(self, x, t=5, layer_name="original"):
         return x
 
-denoiser = Denoiser(args=args, layer_dim=layer_dim)
+denoiser = AutoEncoder(args=args, layer_dim=layer_dim)
 denoiser_list = nn.ModuleList([
     Identity_c(),                  # Input
     denoiser,                       # Layer1
@@ -108,7 +110,7 @@ for t in range(10):
         for i, (data, labels) in enumerate(test_loader):
             print("Evaluating batch", i+1, "/", num_batches_test, "...")
             
-            logits = model.forward(data.cuda(), denoiser=denoiser_list, t=t)
+            logits = model.forward(data.cuda(), denoiser=denoiser_list, t=t, layer_name=args.input_type)
             logits = torch.argmax(logits.cpu(), dim=1)
             
             correct_num += torch.sum(logits == labels)

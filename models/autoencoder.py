@@ -30,13 +30,21 @@ class AutoEncoder(Module):
         code, _ = self.encoder(x)
         return code
 
-    def decode(self, code, num_points, flexibility=0.0, ret_traj=False):
-        return self.diffusion.sample(num_points, code, self.layer_dim, flexibility=flexibility, ret_traj=ret_traj)
+    def decode(self, code, num_points, flexibility=0.0, ret_traj=False, layer_name="original"):
+        return self.diffusion.sample(num_points, code, self.layer_dim, flexibility=flexibility, ret_traj=ret_traj, layer_name=layer_name)
 
-    def get_loss(self, x):
+    def get_loss(self, x, layer_name):
         code = self.encode(x)
-        loss = self.diffusion.get_loss(x, code)
+        loss = self.diffusion.get_loss(x, code, t=None, layer_name=layer_name)
         return loss
 
-    def denoiser(self, pointcloud, t, flexibility=0.0, ret_traj=False, context=None):
-        return self.diffusion.truncated_sample(pointcloud, t, context=context)
+    def denoiser(self, pointcloud, t, flexibility=0.0, ret_traj=False, context=None, layer_name="original"):
+        return self.diffusion.truncated_sample(pointcloud, t, context=context, layer_name=layer_name)
+    
+    # Do the denoising
+    def denoise_layer(self, x, t=5, layer_name="original"):
+        x = x.transpose(1, 2)
+        code = self.encode(x)
+        x = self.denoiser(x, t, context=code, layer_name="original")
+        x = x.transpose(1, 2)
+        return x

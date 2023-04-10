@@ -12,6 +12,7 @@ from utils.transform import *
 from models.autoencoder import *
 from evaluation import EMD_CD
 
+from models.dgcnn import DGCNN
 
 # Arguments
 parser = argparse.ArgumentParser()
@@ -29,8 +30,8 @@ parser.add_argument('--resume', type=str, default=None)
 parser.add_argument('--dataset_path', type=str, default='./data/shapenet.hdf5')
 parser.add_argument('--categories', type=str_list, default=['airplane'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
-parser.add_argument('--train_batch_size', type=int, default=256)
-parser.add_argument('--val_batch_size', type=int, default=128)
+parser.add_argument('--train_batch_size', type=int, default=32)
+parser.add_argument('--val_batch_size', type=int, default=32)
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
 
 # Optimizer and scheduler
@@ -47,13 +48,14 @@ parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
 parser.add_argument('--log_root', type=str, default='./logs_ae')
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--max_iters', type=int, default=float('inf'))
-parser.add_argument('--val_freq', type=float, default=1000)
+parser.add_argument('--val_freq', type=float, default=2000) # default=1000
 parser.add_argument('--tag', type=str, default=None)
 parser.add_argument('--num_val_batches', type=int, default=-1)
 parser.add_argument('--num_inspect_batches', type=int, default=1)
 parser.add_argument('--num_inspect_pointclouds', type=int, default=4)
-parser.add_argument('--input_type', type=str, default='x1')  # "x1", "x2", "x3", "x4", "original"
-parser.add_argument('--train_mode', type=str, default='train_layers')
+parser.add_argument('--input_type', type=str, default='x1', choices=["x1", "x2", "x3", "x4", "original"])  # "x1", "x2", "x3", "x4", "original"
+parser.add_argument('--random_input_layer', type=bool, default=False, choices=[True, False])
+parser.add_argument('--train_mode', type=str, default='train_ae_DGCNN_layers')# 'train_ae_default','train_ae_DGCNN_layers', 'train_layers'
 
 
 args = parser.parse_args()
@@ -101,9 +103,39 @@ if args.train_mode == "train_ae_default":
     ))
     val_loader = DataLoader(val_dset, batch_size=args.val_batch_size, num_workers=0)
     
-else:
+elif args.train_mode == "train_ae_DGCNN_layers":
     layer_name = args.input_type
+    if layer_name == "original":
+        standardize = False
+    else:
+        standardize = True
+
+    train_dset = ModelNet40(num_points=1024, partition='train')
+    val_dset = ModelNet40(num_points=1024, partition='val')
+
+    train_iter = get_data_iterator(DataLoader(
+        train_dset,
+        batch_size=args.train_batch_size,
+        num_workers=0,
+    ))
+    val_loader = DataLoader(val_dset, batch_size=args.val_batch_size, num_workers=0)
     
+    dgcnn_model =  DGCNN(mode="return_layers")
+    model_dict = torch.load("model_best_test.pth")["model_state"]
+    model_keys = list(model_dict.keys())
+    for key in model_keys:
+        if key.startswith("model."):
+            keyname = key[6:]
+            model_dict[keyname] = model_dict.pop(key)
+        else:
+            _ = model_dict.pop(key)
+
+    dgcnn_model.load_state_dict(model_dict)
+    dgcnn_model.cuda()
+    dgcnn_model.eval()
+    
+else:
+    layer_name = args.input_name
     if layer_name == "original":
         standardize = False
     else:
@@ -127,6 +159,7 @@ else:
 # Model
 layer_dict = {"x1":64, "x2":64, "x3":128, "x4":256, "original":3}
 layer_dim = layer_dict[layer_name]
+if args.random_input_layer: layer_dim=256
 
 logger.info('Building model...')
 if args.resume is not None:
@@ -152,18 +185,48 @@ scheduler = get_linear_scheduler(
     end_lr=args.end_lr
 )
 
+
+class Identity_c(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x, t=5, layer_name="original"):
+        return x
+    def denoise_layer(self, x, t=5, layer_name="original"):
+        return x
+
+# denoiser = Denoiser(args=args, layer_dim=layer_dim)
+denoiser_list = nn.ModuleList([
+    Identity_c(),                  # Input
+    Identity_c(),                       # Layer1
+    Identity_c(),                  # Layer2
+    Identity_c(),                  # Layer3
+    Identity_c(),                  # Layer4
+])
+
 # Train, validate
 def train(it):
     # Load data
     batch = next(train_iter)
     x = batch[0].to(args.device)
-
+    if args.train_mode == "train_ae_DGCNN_layers":
+        with torch.no_grad():
+            if args.random_input_layer: 
+                global layer_name
+                layer_name = np.random.choice(["x1","x2","x3","x4"], p=[0.25,0.25,0.25,0.25])
+            _, layers = dgcnn_model.forward(x.permute((0,2,1)), denoiser=denoiser_list, t=1, layer_name=layer_name)
+            x = layers[layer_name]
+            if standardize:
+                x -= torch.mean(x, axis=0)
+                x /= torch.std(x)
+            #Zeropad
+            if args.random_input_layer: x = F.pad(x, (0,0, 0,layer_dim-x.size(1)))
+    
     # Reset grad and model state
     optimizer.zero_grad()
     model.train()
 
     # Forward
-    loss = model.get_loss(x)
+    loss = model.get_loss(x, layer_name=layer_name)
 
     # Backward and optimize
     loss.backward()
@@ -184,13 +247,25 @@ def validate_loss(it):
     for i, batch in enumerate(tqdm(val_loader, desc='Validate')):
         if args.num_val_batches > 0 and i >= args.num_val_batches:
             break
-        ref = batch[0].to(args.device)
-        # shift = batch['shift'].to(args.device)
+        ref = batch[0].to(args.device).permute((0,2,1))
+        if args.train_mode == "train_ae_DGCNN_layers":
+            if args.random_input_layer: 
+                global layer_name
+                layer_name = np.random.choice(["x1","x2","x3","x4"], p=[0.25,0.25,0.25,0.25])
+            with torch.no_grad():
+                _, layers = dgcnn_model.forward(ref, denoiser=denoiser_list, t=1, layer_name=layer_name)
+                ref = layers[layer_name]
+            if standardize:
+                ref -= torch.mean(ref, axis=0)
+                ref /= torch.std(ref)
+            if args.random_input_layer: ref = F.pad(x, (0,0, 0,layer_dim-ref.size(1)))
+            # shift = batch['shift'].to(args.device)
         # scale = batch['scale'].to(args.device)
         with torch.no_grad():
             model.eval()
             code = model.encode(ref)
-            recons = model.decode(code, ref.size(1), flexibility=args.flexibility)
+            ref = ref.permute((0,2,1))
+            recons = model.decode(code, ref.size(1), flexibility=args.flexibility, layer_name=layer_name)
         # all_refs.append(ref * scale + shift)
         all_refs.append(ref)
         # all_recons.append(recons * scale + shift)
@@ -212,10 +287,22 @@ def validate_inspect(it):
     sum_n = 0
     sum_chamfer = 0
     for i, batch in enumerate(tqdm(val_loader, desc='Inspect')):
-        x = batch[0].to(args.device)
+        x = batch[0].to(args.device).permute((0,2,1))
+        if args.train_mode == "train_ae_DGCNN_layers":
+            if args.random_input_layer: 
+                global layer_name
+                layer_name = np.random.choice(["x1","x2","x3","x4"], p=[0.25,0.25,0.25,0.25])
+            with torch.no_grad():
+                _, layers = dgcnn_model.forward(x, denoiser=denoiser_list, t=1, layer_name=layer_name)
+                x = layers[layer_name]
+            if standardize:
+                x -= torch.mean(x, axis=0)
+                x /= torch.std(x)
+            if args.random_input_layer: x = F.pad(x, (0,0, 0,layer_dim-x.size(1)))
         model.eval()
         code = model.encode(x)
-        recons = model.decode(code, x.size(1), flexibility=args.flexibility).detach()
+        x = x.permute((0,2,1))
+        recons = model.decode(code, x.size(1), flexibility=args.flexibility, layer_name=layer_name).detach()
 
         sum_n += x.size(0)
         if i >= args.num_inspect_batches:

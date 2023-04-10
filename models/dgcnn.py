@@ -60,7 +60,7 @@ class DGCNN(nn.Module):
         self.leaky_relu = True
         
         self.mode = mode
-        assert self.mode in ["main_train", "save_layers"] # Check modes
+        assert self.mode in ["main_train", "save_layers", "return_layers"] # Check modes
         
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(64)
@@ -100,13 +100,15 @@ class DGCNN(nn.Module):
     
     def forward(self, x, 
                 denoiser=nn.ModuleList([nn.Identity() for i in range(5)]),
-                t = 5):
+                t = 5,
+                layer_name = "original"):
         batch_size = x.size(0)
-        x = denoiser[0](x) # Denoising input
+        original = x.clone()
+        x = denoiser[0].denoise_layer(x) # Denoising input
         x = get_graph_feature(x, k=self.k)
         x = self.conv1(x)
         x1 = x.max(dim=-1, keepdim=False)[0]
-        x1 = denoiser[1](x1, t) # Denosing Layer1
+        x1 = denoiser[1].denoise_layer(x1, t) # Denosing Layer1
 
         x = get_graph_feature(x1, k=self.k)
         x = self.conv2(x)
@@ -125,13 +127,16 @@ class DGCNN(nn.Module):
 
         x = torch.cat((x1, x2, x3, x4), dim=1)
 
-        # if self.mode == "save_layers":
-        #     save_copy = torch.clone(x)
+        if self.mode == "save_layers":
+            save_copy = torch.clone(x)
         
-        #     sizes = {"x1" : x1.shape,
-        #             "x2" : x2.shape,
-        #             "x3" : x3.shape,
-        #             "x4" : x4.shape}
+            sizes = {"x1" : x1.shape,
+                    "x2" : x2.shape,
+                    "x3" : x3.shape,
+                    "x4" : x4.shape}
+            
+        elif self.mode == "return_layers":
+            layers = {"original":original,"x1":x1.clone(),"x2":x2.clone(),"x3":x3.clone(),"x4":x4.clone()}
 
         x = self.conv5(x)
         x1 = F.adaptive_max_pool1d(x, 1).view(batch_size, -1)
@@ -150,7 +155,9 @@ class DGCNN(nn.Module):
         x = self.linear3(x)
         if self.mode == "main_train":
             return x
-        # elif self.mode == "save_layers":
-        #     return x, save_copy, sizes
+        elif self.mode == "save_layers":
+            return x, save_copy, sizes
+        elif self.mode == "return_layers":
+            return x, layers
         else:
             return x
