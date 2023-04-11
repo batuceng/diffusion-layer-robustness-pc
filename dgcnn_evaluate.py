@@ -15,7 +15,7 @@ import sklearn.metrics as metrics
 import models 
 from models.dgcnn import DGCNN
 from models.autoencoder import AutoEncoder
-from utils.dataset import ModelNet40
+from utils.dataset import ModelNet40, ModelNet40C
 from utils.misc import seed_all
 
 
@@ -42,7 +42,8 @@ seed_all(args.seed)
 
 
 # Dataset
-test_dset = ModelNet40(num_points=1024, partition='test')
+# test_dset = ModelNet40(num_points=1024, partition='test')
+test_dset = ModelNet40C(split="test", test_data_path="data/modelnet40_c",corruption="background",severity=1)
 test_loader = DataLoader(test_dset, batch_size=args.val_batch_size, num_workers=0)
 
 # Load pretrained DGCNN
@@ -94,8 +95,9 @@ ckpt = torch.load(args.denoiser_cpkt_path)
 denoiser =  AutoEncoder(ckpt['args'], layer_dim=layer_dim).cuda()
 denoiser_list = nn.ModuleList([
     Identity_c(),                  # Input
+    Identity_c(),                  # Input
+    # denoiser,                       # Layer1
     Identity_c(),                  # Layer2
-    denoiser,                       # Layer1
     Identity_c(),                  # Layer3
     Identity_c(),                  # Layer4
 ])

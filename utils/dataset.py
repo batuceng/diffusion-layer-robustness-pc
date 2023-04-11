@@ -286,3 +286,40 @@ class ModelNet40(Dataset):
         N, C = pointcloud.shape
         pointcloud += np.clip(sigma * np.random.randn(N, C), -1*clip, clip)
         return pointcloud
+    
+    
+class ModelNet40C(Dataset):
+    def __init__(self, split="test", test_data_path="../data/modelnet40_c",corruption=None,severity=None):
+        assert split == 'test'
+        self.split = split
+        self.data_path = {
+            "test":  test_data_path
+        }[self.split]
+        assert corruption in ["background", "cutout", "density", "density_inc", "distortion", "distortion_rbf", "distortion_rbf_inv",
+                              "gaussian", "impulse", "lidar", "occlusion", "rotation", "shear", "uniform", "upsampling"]
+        assert severity in [1,2,3,4,5]
+        self.corruption = corruption
+        self.severity = severity
+
+        self.data, self.label = self.__load_data(self.data_path, self.corruption, self.severity)
+        # self.num_points = num_points
+        self.partition =  'test'
+
+    def __getitem__(self, item):
+        pointcloud = self.data[item]#[:self.num_points]
+        label = self.label[item]
+        # return {'pc': pointcloud, 'label': label.item()}
+        return pointcloud, label.item()
+
+    def __len__(self):
+        return self.data.shape[0]
+    
+    def __load_data(self, data_path,corruption,severity):
+
+        DATA_DIR = os.path.join(data_path, 'data_' + corruption + '_' +str(severity) + '.npy')
+        # if corruption in ['occlusion']:
+        #     LABEL_DIR = os.path.join(data_path, 'label_occlusion.npy')
+        LABEL_DIR = os.path.join(data_path, 'label.npy')
+        all_data = np.load(DATA_DIR)
+        all_label = np.load(LABEL_DIR)
+        return all_data, all_label
