@@ -43,8 +43,19 @@ class AutoEncoder(Module):
     
     # Do the denoising
     def denoise_layer(self, x, t=5, layer_name="original"):
+        #Normalize
         x = x.transpose(1, 2)
-        code = self.encode(x)
+        mean = torch.mean(x, axis=1, keepdim=True)
+        x -= mean
+        std = torch.std(x, axis=(1,2), keepdim=True)
+        x /= std
+        
+        # Denoise
+        code = self.encode(x.transpose(1,2))
         x = self.denoiser(x, t, context=code, layer_name="original")
+        
+        # Denormalize
+        x *= std
+        x += mean
         x = x.transpose(1, 2)
         return x

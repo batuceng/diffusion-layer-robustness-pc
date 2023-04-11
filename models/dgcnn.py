@@ -104,26 +104,26 @@ class DGCNN(nn.Module):
                 layer_name = "original"):
         batch_size = x.size(0)
         original = x.clone()
-        x = denoiser[0].denoise_layer(x) # Denoising input
+        x = denoiser[0].denoise_layer(x, t, layer_name) # Denoising input
         x = get_graph_feature(x, k=self.k)
         x = self.conv1(x)
         x1 = x.max(dim=-1, keepdim=False)[0]
-        x1 = denoiser[1].denoise_layer(x1, t) # Denosing Layer1
+        x1 = denoiser[1].denoise_layer(x1, t, layer_name) # Denosing Layer1
 
         x = get_graph_feature(x1, k=self.k)
         x = self.conv2(x)
         x2 = x.max(dim=-1, keepdim=False)[0]
-        x2 = denoiser[2](x2, t) # Denosing Layer2
+        x2 = denoiser[2].denoise_layer(x2, t, layer_name) # Denosing Layer2
 
         x = get_graph_feature(x2, k=self.k)
         x = self.conv3(x)
         x3 = x.max(dim=-1, keepdim=False)[0]
-        x3 = denoiser[3](x3, t) # Denosing Layer3
+        x3 = denoiser[3].denoise_layer(x3, t, layer_name) # Denosing Layer3
 
         x = get_graph_feature(x3, k=self.k)
         x = self.conv4(x)
         x4 = x.max(dim=-1, keepdim=False)[0]
-        x4 = denoiser[4](x4, t) # Denosing Layer4
+        x4 = denoiser[4].denoise_layer(x4, t, layer_name) # Denosing Layer4
 
         x = torch.cat((x1, x2, x3, x4), dim=1)
 

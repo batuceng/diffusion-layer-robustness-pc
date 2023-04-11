@@ -15,7 +15,7 @@ import sklearn.metrics as metrics
 import models 
 from models.dgcnn import DGCNN
 from models.autoencoder import AutoEncoder
-from utils.dataset import Layer1
+from utils.dataset import ModelNet40
 from utils.misc import seed_all
 
 
@@ -31,9 +31,10 @@ parser.add_argument('--sched_mode', type=str, default='linear')
 parser.add_argument('--flexibility', type=float, default=0.0)
 parser.add_argument('--residual', type=eval, default=True, choices=[True, False])
 parser.add_argument('--denoiser_cpkt_path', type=str, 
-                    default="/home/robust/Desktop/diffusion-point-cloud-main/logs_ae/AE_2023_04_07__15_39_28/ckpt_21.095808_61000.pt")
+                    default="logs_ae/AE_2023_04_07__15_39_28/ckpt_20.905350_76000.pt")
 # Training
 parser.add_argument('--input_type', type=str, default='x1')  # "x1", "x2", "x3", "x4", "original"
+parser.add_argument('--val_batch_size', type=int, default=32)
 parser.add_argument('--seed', type=int, default=42)
 
 args = parser.parse_args()
@@ -41,8 +42,8 @@ seed_all(args.seed)
 
 
 # Dataset
-test_dset = Layer1("original", split="test", standardize=False)
-test_loader = DataLoader(test_dset, batch_size=32, num_workers=0)
+test_dset = ModelNet40(num_points=1024, partition='test')
+test_loader = DataLoader(test_dset, batch_size=args.val_batch_size, num_workers=0)
 
 # Load pretrained DGCNN
 model =  DGCNN()
@@ -88,18 +89,20 @@ class Identity_c(nn.Module):
     def denoise_layer(self, x, t=5, layer_name="original"):
         return x
 
-denoiser = AutoEncoder(args=args, layer_dim=layer_dim)
+assert args.denoiser_cpkt_path is not None
+ckpt = torch.load(args.denoiser_cpkt_path)
+denoiser =  AutoEncoder(ckpt['args'], layer_dim=layer_dim).cuda()
 denoiser_list = nn.ModuleList([
     Identity_c(),                  # Input
-    denoiser,                       # Layer1
     Identity_c(),                  # Layer2
+    denoiser,                       # Layer1
     Identity_c(),                  # Layer3
     Identity_c(),                  # Layer4
 ])
 
 # t = 10
 results = {}
-for t in range(10):
+for t in range(0,30,3):
     t +=1
     # EVALUATE
     num_batches_test = len(test_loader)
@@ -109,11 +112,10 @@ for t in range(10):
     with torch.no_grad():
         for i, (data, labels) in enumerate(test_loader):
             print("Evaluating batch", i+1, "/", num_batches_test, "...")
-            
-            logits = model.forward(data.cuda(), denoiser=denoiser_list, t=t, layer_name=args.input_type)
+            logits = model.forward(data.permute((0,2,1)).cuda(), denoiser=denoiser_list, t=t, layer_name=args.input_type)
             logits = torch.argmax(logits.cpu(), dim=1)
             
-            correct_num += torch.sum(logits == labels)
+            correct_num += torch.sum(logits == labels.squeeze())
             num_samples_test += len(labels)
         
         total_acc = correct_num/num_samples_test

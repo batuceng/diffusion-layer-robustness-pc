@@ -258,7 +258,7 @@ def validate_loss(it):
             if standardize:
                 ref -= torch.mean(ref, axis=0)
                 ref /= torch.std(ref)
-            if args.random_input_layer: ref = F.pad(x, (0,0, 0,layer_dim-ref.size(1)))
+            if args.random_input_layer: ref = F.pad(ref, (0,0, 0,layer_dim-ref.size(1)))
             # shift = batch['shift'].to(args.device)
         # scale = batch['scale'].to(args.device)
         with torch.no_grad():
