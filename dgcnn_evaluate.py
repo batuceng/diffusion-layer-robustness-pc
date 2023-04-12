@@ -37,7 +37,7 @@ parser.add_argument('--corruption', type=str, default='gaussian', choices=["back
                                                                          "shear", "uniform", "upsampling"])
 parser.add_argument('--severity', type=int, default=4, choices=[1,2,3,4,5])
 parser.add_argument('--denoiser_cpkt_path', type=str, 
-                    default="logs_ae/AE_2023_04_11__05_17_45/ckpt_0.006171_588000.pt")
+                    default="logs_x1/AE_2023_04_12__13_16_11/ckpt_19.629311_329000.pt")
 # Training
 # parser.add_argument('--input_type', type=str, default='original')  # "x1", "x2", "x3", "x4", "original"
 parser.add_argument('--val_batch_size', type=int, default=32)

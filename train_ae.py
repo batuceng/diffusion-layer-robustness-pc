@@ -48,7 +48,7 @@ parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
 parser.add_argument('--log_root', type=str, default='./logs_ae')
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--max_iters', type=int, default=float('inf'))
-parser.add_argument('--val_freq', type=float, default=2000) # default=1000
+parser.add_argument('--val_freq', type=float, default=1000) # default=1000
 parser.add_argument('--tag', type=str, default=None)
 parser.add_argument('--num_val_batches', type=int, default=-1)
 parser.add_argument('--num_inspect_batches', type=int, default=1)
@@ -60,6 +60,7 @@ parser.add_argument('--train_mode', type=str, default='train_ae_DGCNN_layers')# 
 
 args = parser.parse_args()
 seed_all(args.seed)
+# torch.backends.cudnn.enabled = False
 
 # Logging
 if args.logging:
@@ -197,7 +198,7 @@ class Identity_c(nn.Module):
 # denoiser = Denoiser(args=args, layer_dim=layer_dim)
 denoiser_list = nn.ModuleList([
     Identity_c(),                  # Input
-    Identity_c(),                       # Layer1
+    Identity_c(),                  # Layer1
     Identity_c(),                  # Layer2
     Identity_c(),                  # Layer3
     Identity_c(),                  # Layer4
@@ -215,11 +216,11 @@ def train(it):
                 layer_name = np.random.choice(["x1","x2","x3","x4"], p=[0.25,0.25,0.25,0.25])
             _, layers = dgcnn_model.forward(x.permute((0,2,1)), denoiser=denoiser_list, t=1, layer_name=layer_name)
             x = layers[layer_name]
-            if standardize:
-                x -= torch.mean(x, axis=0)
-                x /= torch.std(x)
             #Zeropad
             if args.random_input_layer: x = F.pad(x, (0,0, 0,layer_dim-x.size(1)))
+            if standardize:
+                x -= torch.mean(x, axis=(2), keepdim=True)
+                x /= torch.std(x, axis=(1,2), keepdim=True)
     
     # Reset grad and model state
     optimizer.zero_grad()
@@ -255,10 +256,11 @@ def validate_loss(it):
             with torch.no_grad():
                 _, layers = dgcnn_model.forward(ref, denoiser=denoiser_list, t=1, layer_name=layer_name)
                 ref = layers[layer_name]
-            if standardize:
-                ref -= torch.mean(ref, axis=0)
-                ref /= torch.std(ref)
+            #Zeropad
             if args.random_input_layer: ref = F.pad(ref, (0,0, 0,layer_dim-ref.size(1)))
+            if standardize:
+                ref -= torch.mean(ref, axis=(2), keepdim=True)
+                ref /= torch.std(ref, axis=(1,2), keepdim=True)
             # shift = batch['shift'].to(args.device)
         # scale = batch['scale'].to(args.device)
         with torch.no_grad():
@@ -295,10 +297,11 @@ def validate_inspect(it):
             with torch.no_grad():
                 _, layers = dgcnn_model.forward(x, denoiser=denoiser_list, t=1, layer_name=layer_name)
                 x = layers[layer_name]
-            if standardize:
-                x -= torch.mean(x, axis=0)
-                x /= torch.std(x)
+            #Zeropad
             if args.random_input_layer: x = F.pad(x, (0,0, 0,layer_dim-x.size(1)))
+            if standardize:
+                x -= torch.mean(x, axis=(2), keepdim=True)
+                x /= torch.std(x, axis=(1,2), keepdim=True)
         model.eval()
         code = model.encode(x)
         x = x.permute((0,2,1))
