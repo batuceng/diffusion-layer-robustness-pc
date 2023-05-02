@@ -33,6 +33,7 @@ parser.add_argument('--scale_mode', type=str, default='shape_unit')
 parser.add_argument('--train_batch_size', type=int, default=32)
 parser.add_argument('--val_batch_size', type=int, default=32)
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
+parser.add_argument('--train_witerator', type=bool, default=True) # Whether use iterator or epoch based training
 
 # Optimizer and scheduler
 parser.add_argument('--lr', type=float, default=1e-3)
@@ -114,11 +115,14 @@ elif args.train_mode == "train_ae_DGCNN_layers":
     train_dset = ModelNet40(num_points=1024, partition='train')
     val_dset = ModelNet40(num_points=1024, partition='val')
 
-    train_iter = get_data_iterator(DataLoader(
-        train_dset,
-        batch_size=args.train_batch_size,
-        num_workers=0,
-    ))
+    if args.train_witerator:
+        train_iter = get_data_iterator(DataLoader(
+            train_dset,
+            batch_size=args.train_batch_size,
+            num_workers=0,
+        ))
+    else:
+        train_iter = DataLoader(train_dset, batch_size=args.val_batch_size, num_workers=0)
     val_loader = DataLoader(val_dset, batch_size=args.val_batch_size, num_workers=0)
     
     dgcnn_model =  DGCNN(mode="return_layers")
@@ -241,6 +245,8 @@ def train(it):
     writer.add_scalar('train/grad_norm', orig_grad_norm, it)
     writer.flush()
 
+
+
 def validate_loss(it):
 
     all_refs = []
@@ -318,6 +324,7 @@ def validate_inspect(it):
 logger.info('Start training...')
 try:
     it = 1
+    epoch_no = (it-1) % (len(train_dset) // args.train_batch_size)
     while it <= args.max_iters:
         train(it)
         if it % args.val_freq == 0 or it == args.max_iters:
