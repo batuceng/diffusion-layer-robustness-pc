@@ -16,6 +16,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from models.common import Identity_c
 
 
 def knn(x, k):
@@ -99,7 +100,7 @@ class DGCNN(nn.Module):
         self.linear3 = nn.Linear(256, output_channels)
     
     def forward(self, x, 
-                denoiser=nn.ModuleList([nn.Identity() for i in range(5)]),
+                denoiser=nn.ModuleList([Identity_c() for i in range(5)]),
                 t = 5,
                 layer_name = "original"):
         batch_size = x.size(0)

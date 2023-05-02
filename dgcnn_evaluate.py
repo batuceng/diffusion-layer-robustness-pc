@@ -15,9 +15,11 @@ import sklearn.metrics as metrics
 import models 
 from models.dgcnn import DGCNN
 from models.autoencoder import AutoEncoder
-from utils.dataset import ModelNet40, ModelNet40C
+from utils.dataset import ModelNet40, ModelNet40C, ModelNet40Attack
 from utils.misc import seed_all
-
+from attack import FGM, IFGM, MIFGM, PGD
+from attack import CrossEntropyAdvLoss, LogitsAdvLoss
+from attack import ClipPointsL2
 
 
 # Arguments
@@ -50,11 +52,29 @@ parser.add_argument('--corruption', type=str, default='gaussian', choices=["back
                                                                          "shear", "uniform", "upsampling"])
 parser.add_argument('--severity', type=int, default=4, choices=[1,2,3,4,5])
 parser.add_argument('--denoiser_cpkt_path', type=str, 
-                    default="logs_x1/AE_2023_04_12__13_16_11/ckpt_19.629311_329000.pt")
+                    default="pretrained/ckpt_19.629311_329000_x1.pt")
 # Training
 # parser.add_argument('--input_type', type=str, default='original')  # "x1", "x2", "x3", "x4", "original"
 parser.add_argument('--val_batch_size', type=int, default=32)
 parser.add_argument('--seed', type=int, default=42)
+
+# Attack arguments
+parser.add_argument('--attack_type', type=str, default="pgd")
+parser.add_argument('--budget', type=float, default=0.08,
+                        help='FGM attack budget')
+parser.add_argument('--num_iter', type=int, default=50,
+                    help='IFGM iterate step')
+parser.add_argument('--mu', type=float, default=1.,
+                    help='momentum factor for MIFGM attack')
+parser.add_argument('--local_rank', default=-1, type=int,
+                    help='node rank for distributed training')
+parser.add_argument('--num_points', type=int, default=1024,
+                        help='num of points to use')
+parser.add_argument('--adv_func', type=str, default='logits',
+                        choices=['logits', 'cross_entropy'],
+                        help='Adversarial loss function to use')
+parser.add_argument('--kappa', type=float, default=0.,
+                        help='min margin in logits adv loss')
 
 args = parser.parse_args()
 seed_all(args.seed)
@@ -67,7 +87,9 @@ seed_all(args.seed)
 # test_dset = ModelNet40(num_points=1024, partition='test')
 
 # corruption, severity = ("density", 5)
-test_dset = ModelNet40C(split="test", test_data_path="data/modelnet40_c",corruption=args.corruption,severity=args.severity)
+
+# test_dset = ModelNet40C(split="test", test_data_path="data/modelnet40_c",corruption=args.corruption,severity=args.severity)
+test_dset = ModelNet40Attack(data_root="data/ModelNet40attack", num_points=args.num_points)
 test_loader = DataLoader(test_dset, batch_size=args.val_batch_size, num_workers=0)
 
 # Load pretrained DGCNN
@@ -84,6 +106,36 @@ for key in model_keys:
 model.load_state_dict(model_dict)
 model.cuda()
 model.eval()
+
+# ATTACK
+
+if args.adv_func == 'logits':
+    adv_func = LogitsAdvLoss(kappa=args.kappa)
+else:
+    adv_func = CrossEntropyAdvLoss()
+clip_func = ClipPointsL2(budget=args.budget)
+
+delta = args.budget
+args.budget = args.budget * np.sqrt(args.num_points * 3)  # \delta * \sqrt(N * d)
+args.num_iter = int(args.num_iter)
+args.step_size = args.budget / float(args.num_iter)
+    
+# 4 variants of FGM
+if args.attack_type.lower() == 'fgm':
+    attacker = FGM(model, adv_func=adv_func,
+                    budget=args.budget, dist_metric='l2')
+elif args.attack_type.lower() == 'ifgm':
+    attacker = IFGM(model, adv_func=adv_func,
+                    clip_func=clip_func, budget=args.budget, step_size=args.step_size,
+                    num_iter=args.num_iter, dist_metric='l2')
+elif args.attack_type.lower() == 'mifgm':
+    attacker = MIFGM(model, adv_func=adv_func,
+                        clip_func=clip_func, budget=args.budget, step_size=args.step_size,
+                        num_iter=args.num_iter, mu=args.mu, dist_metric='l2')
+elif args.attack_type.lower() == 'pgd':
+    attacker = PGD(model, adv_func=adv_func,
+                    clip_func=clip_func, budget=args.budget, step_size=args.step_size,
+                    num_iter=args.num_iter, dist_metric='l2')
 
 # DENOISER
 
@@ -120,7 +172,7 @@ ckpt = torch.load(args.denoiser_cpkt_path)
 layer_name = ckpt['args'].input_type
 layer_no, layer_dim = layer_dict[layer_name]
 
-denoiser =  AutoEncoder(ckpt['args'], layer_dim=layer_dim)
+denoiser = AutoEncoder(ckpt['args'], layer_dim=layer_dim)
 denoiser.load_state_dict(ckpt['state_dict'])
 denoiser.cuda()
 denoiser.eval()
@@ -133,6 +185,7 @@ denoiser_list = nn.ModuleList([
 ])
 denoiser_list[layer_no] = denoiser
 print(f"layer_no:{layer_no}, layer_name:{ckpt['args'].input_type}, corruption:{args.corruption}, severity:{args.severity} ckpt_path:{args.denoiser_cpkt_path}")
+
 # t = 10
 results = {}
 for t in range(12):
@@ -141,15 +194,18 @@ for t in range(12):
     num_batches_test = len(test_loader)
     num_samples_test = 0
     correct_num = 0
-
-    with torch.no_grad():
-        for i, (data, labels) in enumerate(test_loader):
+    
+    for i, (data, labels, target_labels) in enumerate(test_loader):
+        
+        best_pc, success_num = attacker.attack(data, target_labels)
+        print(best_pc.shape)
+        with torch.no_grad():
             # print("Evaluating batch", i+1, "/", num_batches_test, "...")
             logits = model.forward(data.permute((0,2,1)).cuda(), denoiser=denoiser_list, t=t, layer_name=layer_name)
             logits = torch.argmax(logits.cpu(), dim=1)
-            
-            correct_num += torch.sum(logits == labels.squeeze())
-            num_samples_test += len(labels)
+        
+        correct_num += torch.sum(logits == labels.squeeze())
+        num_samples_test += len(labels)
         
         total_acc = correct_num/num_samples_test
         print(f"Test accuracy : {total_acc:.4f}, denoising_t:{t}") 

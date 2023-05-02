@@ -323,3 +323,44 @@ class ModelNet40C(Dataset):
         all_data = np.load(DATA_DIR)
         all_label = np.load(LABEL_DIR)
         return all_data, all_label
+
+
+def normalize_points_np(points):
+    """points: [K, 3]"""
+    points = points - np.mean(points, axis=0)[None, :]  # center
+    dist = np.max(np.sqrt(np.sum(points ** 2, axis=1)), 0)
+    points = points / dist  # scale
+    assert np.sum(np.isnan(points)) == 0
+    return points
+
+
+class ModelNet40Attack(Dataset):
+    """Modelnet40 dataset for target attack evaluation.
+    We return an additional target label for an example.
+    """
+
+    def __init__(self, data_root, num_points, normalize=True):
+        self.data, self.label, self.target = self.load_data(data_root)
+        self.num_points = num_points
+        self.normalize = normalize
+    
+    def __getitem__(self, item):
+        """Returns: point cloud as [N, 3], its label as a scalar
+            and its target label for attack as a scalar.
+        """
+        pc = self.data[item][:self.num_points, :3]
+        label = self.label[item]
+        target = self.target[item]
+
+        if self.normalize:
+            pc = normalize_points_np(pc)
+
+        return pc, label, target
+
+    def load_data(self, data_path):
+        DATA_DIR = os.path.join(data_path, "attack_data.npz")
+        npz = np.load(DATA_DIR, allow_pickle=True)
+        return npz['test_pc'], npz['test_label'], npz['target_label']
+
+    def __len__(self):
+        return self.data.shape[0]
