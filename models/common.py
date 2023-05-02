@@ -33,6 +33,14 @@ def truncated_normal_(tensor, mean=0, std=1, trunc_std=2):
     tensor.data.mul_(std).add_(mean)
     return tensor
 
+class Identity_c(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x, t=5, layer_name="original"):
+        return x
+    def denoise_layer(self, x, t=5, layer_name="original"):
+        return x
+
 
 class ConcatSquashLinear(Module):
     def __init__(self, dim_in, dim_out, dim_ctx):
