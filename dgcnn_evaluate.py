@@ -33,6 +33,19 @@ parser = argparse.ArgumentParser()
 # parser.add_argument('--flexibility', type=float, default=0.0)
 # parser.add_argument('--residual', type=eval, default=True, choices=[True, False])
 
+
+
+#### TO DO LIST
+"""
+    -Add adversarial attacks
+    -Add training epoch loss
+    -Normalize ChamferDistance by num of dimension
+    -Solve batch size error
+    -Cleanup code
+    -Move standardization to dataloader
+"""
+
+
 parser.add_argument('--corruption', type=str, default='gaussian', choices=["background", "cutout", "density", "density_inc", 
                                                                          "distortion", "distortion_rbf", "distortion_rbf_inv", 
                                                                          "gaussian", "impulse", "lidar", "occlusion", "rotation", 

@@ -44,7 +44,7 @@ parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
 
 # Training
 parser.add_argument('--seed', type=int, default=42)
-parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
+parser.add_argument('--logging', type=eval, default=False, choices=[True, False])
 parser.add_argument('--log_root', type=str, default='./logs_ae')
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--max_iters', type=int, default=float('inf'))
