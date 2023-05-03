@@ -94,7 +94,7 @@ class FGM:
 
         print('Successfully attack {}/{}'.format(success_num, data.shape[0]))
         torch.cuda.empty_cache()
-        return data.detach().cpu().numpy(), success_num
+        return data.detach(), success_num
 
 
 class IFGM(FGM):
@@ -159,7 +159,7 @@ class IFGM(FGM):
             pred = torch.argmax(logits, dim=-1)
             success_num = (pred == target).sum().item()
         print('Final success: {}/{}'.format(success_num, B))
-        return pc.transpose(1, 2).contiguous().detach().cpu().numpy(), \
+        return pc.transpose(1, 2).contiguous().detach(), \
             success_num
 
 
@@ -237,7 +237,7 @@ class MIFGM(FGM):
             pred = torch.argmax(logits, dim=-1)
             success_num = (pred == target).sum().item()
         print('Final success: {}/{}'.format(success_num, B))
-        return pc.transpose(1, 2).contiguous().detach().cpu().numpy(), \
+        return pc.transpose(1, 2).contiguous().detach(), \
             success_num
 
 
@@ -279,3 +279,15 @@ class PGD(IFGM):
         with torch.no_grad():
             init_data = data + init_perturbation
         return super(PGD, self).attack(init_data, target)
+
+
+class Identity_Attack:
+    """Class for FGM attack.
+    """
+
+    def __init__(self):
+        pass
+    
+    def attack(self, data, target):
+        success_num = 0
+        return data, success_num

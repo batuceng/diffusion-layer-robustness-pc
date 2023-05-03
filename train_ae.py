@@ -17,8 +17,8 @@ from models.dgcnn import DGCNN
 # Arguments
 parser = argparse.ArgumentParser()
 # Model arguments
-parser.add_argument('--latent_dim', type=int, default=256)
-parser.add_argument('--num_steps', type=int, default=200)
+parser.add_argument('--latent_dim', type=int, default=512)
+parser.add_argument('--num_steps', type=int, default=256)
 parser.add_argument('--beta_1', type=float, default=1e-4)
 parser.add_argument('--beta_T', type=float, default=0.05)
 parser.add_argument('--sched_mode', type=str, default='linear')
@@ -30,8 +30,8 @@ parser.add_argument('--resume', type=str, default=None)
 parser.add_argument('--dataset_path', type=str, default='./data/shapenet.hdf5')
 parser.add_argument('--categories', type=str_list, default=['airplane'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
-parser.add_argument('--train_batch_size', type=int, default=32)
-parser.add_argument('--val_batch_size', type=int, default=32)
+parser.add_argument('--train_batch_size', type=int, default=64)
+parser.add_argument('--val_batch_size', type=int, default=64)
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
 parser.add_argument('--train_witerator', type=bool, default=True) # Whether use iterator or epoch based training
 
@@ -40,8 +40,8 @@ parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--weight_decay', type=float, default=0)
 parser.add_argument('--max_grad_norm', type=float, default=10)
 parser.add_argument('--end_lr', type=float, default=1e-4)
-parser.add_argument('--sched_start_epoch', type=int, default=150*THOUSAND)
-parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
+parser.add_argument('--sched_start_epoch', type=int, default=128*THOUSAND)
+parser.add_argument('--sched_end_epoch', type=int, default=256*THOUSAND)
 
 # Training
 parser.add_argument('--seed', type=int, default=42)
@@ -244,6 +244,7 @@ def train(it):
     writer.add_scalar('train/lr', optimizer.param_groups[0]['lr'], it)
     writer.add_scalar('train/grad_norm', orig_grad_norm, it)
     writer.flush()
+    return loss
 
 
 
@@ -324,9 +325,17 @@ def validate_inspect(it):
 logger.info('Start training...')
 try:
     it = 1
-    epoch_no = (it-1) % (len(train_dset) // args.train_batch_size)
+    epoch_no = 0
+    epoch_train_loss_list = []
+    epoch_train_loss = 0
     while it <= args.max_iters:
-        train(it)
+        epoch_train_loss += train(it)
+        
+        # Epoch loop
+        if (it-1) % (len(train_dset) // args.train_batch_size) and it!=1:
+            epoch_train_loss_list.append(epoch_train_loss)
+            logger.info('------ [Train] Epoch %04d | Loss %.6f ------' % (epoch_no, epoch_train_loss))
+            epoch_no += 1
         if it % args.val_freq == 0 or it == args.max_iters:
             with torch.no_grad():
                 cd_loss = validate_loss(it)

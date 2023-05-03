@@ -354,7 +354,6 @@ class ModelNet40Attack(Dataset):
 
         if self.normalize:
             pc = normalize_points_np(pc)
-
         return pc, label, target
 
     def load_data(self, data_path):
