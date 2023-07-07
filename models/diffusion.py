@@ -56,15 +56,15 @@ class PointwiseNet(Module):
         self.act = F.leaky_relu
         self.residual = residual
         self.layers = ModuleList([
-            ConcatSquashLinear(point_dim, 128, context_dim+3+5),
-            ConcatSquashLinear(128, 256, context_dim+3+5),
-            ConcatSquashLinear(256, 512, context_dim+3+5),
-            ConcatSquashLinear(512, 256, context_dim+3+5),
-            ConcatSquashLinear(256, 128, context_dim+3+5),
-            ConcatSquashLinear(128, point_dim, context_dim+3+5)
+            ConcatSquashLinear(3, 128, context_dim+3),
+            ConcatSquashLinear(128, 256, context_dim+3),
+            ConcatSquashLinear(256, 512, context_dim+3),
+            ConcatSquashLinear(512, 256, context_dim+3),
+            ConcatSquashLinear(256, 128, context_dim+3),
+            ConcatSquashLinear(128, 3, context_dim+3)
         ])
 
-    def forward(self, x, beta, context, layer_name):
+    def forward(self, x, beta, context):
         """
         Args:
             x:  Point clouds at some timestep t, (B, N, d).
@@ -76,10 +76,7 @@ class PointwiseNet(Module):
         context = context.view(batch_size, 1, -1)   # (B, 1, F)
 
         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
-        layer_emb_dict = {"original":0,"x1":1,"x2":2,"x3":3,"x4":4}
-        layer_emb = torch.zeros((batch_size, 1, len(layer_emb_dict))).cuda()   # (B,1,5)
-        layer_emb[:,:,layer_emb_dict[layer_name]] = 1
-        ctx_emb = torch.cat([time_emb, layer_emb, context], dim=-1)    # (B, 1, F+3+5)
+        ctx_emb = torch.cat([time_emb, context], dim=-1)    # (B, 1, F+3)
 
         out = x
         for i, layer in enumerate(self.layers):
@@ -100,13 +97,12 @@ class DiffusionPoint(Module):
         self.net = net
         self.var_sched = var_sched
 
-    def get_loss(self, x_0, context, t=None, layer_name="original"):
+    def get_loss(self, x_0, context, t=None):
         """
         Args:
             x_0:  Input point cloud, (B, N, d).
             context:  Shape latent, (B, F).
         """
-        x_0 = x_0.permute((0,2,1))
         batch_size, _, point_dim = x_0.size()
         if t == None:
             t = self.var_sched.uniform_sample_t(batch_size)
@@ -117,12 +113,12 @@ class DiffusionPoint(Module):
         c1 = torch.sqrt(1 - alpha_bar).view(-1, 1, 1)   # (B, 1, 1)
 
         e_rand = torch.randn_like(x_0)  # (B, N, d)
-        e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context=context, layer_name=layer_name)
+        e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context=context)
 
-        loss = F.mse_loss(e_theta.reshape(-1, point_dim), e_rand.reshape(-1, point_dim), reduction='mean')
+        loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
 
-    def sample(self, num_points, context, point_dim=3, flexibility=0.0, ret_traj=False, layer_name="original"):
+    def sample(self, num_points, context, point_dim=3, flexibility=0.0, ret_traj=False):
         batch_size = context.size(0)
         x_T = torch.randn([batch_size, num_points, point_dim]).to(context.device)
         traj = {self.var_sched.num_steps: x_T}
@@ -137,7 +133,7 @@ class DiffusionPoint(Module):
 
             x_t = traj[t]
             beta = self.var_sched.betas[[t]*batch_size]
-            e_theta = self.net(x_t, beta=beta, context=context, layer_name=layer_name)
+            e_theta = self.net(x_t, beta=beta, context=context)
             x_next = c0 * (x_t - c1 * e_theta) + sigma * z
             traj[t-1] = x_next.detach()     # Stop gradient and save trajectory.
             traj[t] = traj[t].cpu()         # Move previous output to CPU memory.
@@ -148,8 +144,9 @@ class DiffusionPoint(Module):
             return traj
         else:
             return traj[0]
-    
-    def truncated_sample(self, pointcloud, T, flexibility=0.0, ret_traj=False, context=None, layer_name="original"):
+
+    # N step backward from current point cloud (Used for purification/denoising)
+    def truncated_sample(self, pointcloud, T, flexibility=0.0, ret_traj=False, context=None):
         assert self.var_sched.num_steps >= T
 
         t = [T] * pointcloud.shape[0]
@@ -174,7 +171,7 @@ class DiffusionPoint(Module):
 
             x_t = traj[t]
             beta = self.var_sched.betas[[t]*batch_size]
-            e_theta = self.net(x_t, beta=beta, context=context, layer_name=layer_name)
+            e_theta = self.net(x_t, beta=beta, context=context)
             x_next = c0 * (x_t - c1 * e_theta) + sigma * z
             traj[t-1] = x_next.detach()     # Stop gradient and save trajectory.
             traj[t] = traj[t].cpu()         # Move previous output to CPU memory.
@@ -185,4 +182,3 @@ class DiffusionPoint(Module):
             return traj
         else:
             return traj[0]
-

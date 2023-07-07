@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import h5py
 from tqdm.auto import tqdm
-import glob
+
 
 synsetid_to_cate = {
     '02691156': 'airplane', '02773838': 'bag', '02801938': 'basket',
@@ -98,7 +98,7 @@ class ShapeNetCore(Dataset):
         
         with h5py.File(self.path, mode='r') as f:
             for pc, pc_id, cate_name in _enumerate_pointclouds(f):
-                
+
                 if self.scale_mode == 'global_unit':
                     shift = pc.mean(dim=0).reshape(1, 3)
                     scale = self.stats['std'].reshape(1, 1)
@@ -142,188 +142,6 @@ class ShapeNetCore(Dataset):
         if self.transform is not None:
             data = self.transform(data)
         return data
-
-class Layer1(Dataset):
-    def __init__(self, layer_name="x1", transform=None, split="train", standardize=False):
-        
-        self.standardize = standardize
-        self.transform = transform
-        self.zero_pad = None # Set to 256 for enabling zero padding
-        
-        self.split = split
-        self.layer_name = layer_name
-        
-        assert self.split in ["train", "val", "test"]
-        assert self.layer_name in ["original","x1","x2","x3","x4"]
-        
-        
-        if split == "train" or split == "val":
-            self.labels = np.load("/home/robust/Desktop/diffusion-point-cloud-main/layer_data/train/input_label.npy")
-            
-            if layer_name == "x1":
-                self.layer_data = np.load("/home/robust/Desktop/diffusion-point-cloud-main/layer_data/train/x1.npy")
-                self.layer_data = np.transpose(self.layer_data, (0, 2, 1))  # B x N x F  (batch, point, channel)
-            elif layer_name == "x2":
-                self.layer_data = np.load("/home/robust/Desktop/diffusion-point-cloud-main/layer_data/train/x2.npy")
-                self.layer_data = np.transpose(self.layer_data, (0, 2, 1))
-            elif layer_name == "x3":
-                self.layer_data = np.load("/home/robust/Desktop/diffusion-point-cloud-main/layer_data/train/x3.npy")
-                self.layer_data = np.transpose(self.layer_data, (0, 2, 1))
-            elif layer_name == "x4":
-                self.layer_data = np.load("/home/robust/Desktop/diffusion-point-cloud-main/layer_data/train/x4.npy")
-                self.layer_data = np.transpose(self.layer_data, (0, 2, 1))
-            else:
-                self.layer_data = np.load("/home/robust/Desktop/diffusion-point-cloud-main/layer_data/train/input_data.npy")
-                self.layer_data = np.transpose(self.layer_data, (0, 2, 1))
-            
-            # if standardize:
-            #     self.mean = np.mean(self.layer_data, axis=1)
-            #     self.std = np.std(self.layer_data.reshape(self.labels.shape[0], -1), axis=1)
-        
-        
-            mask = np.random.permutation(len(self.labels))
-            train = mask[0:len(mask)*4//5]
-            val = mask[len(mask)*4//5:len(mask)]
-                            
-            if split == "val":
-                self.layer_data = self.layer_data[val]            
-                self.labels = self.labels[val]
-            else:
-                self.layer_data = self.layer_data[train]
-                self.labels = self.labels[train]
-
-        elif self.split == "test": # test split
-            self.labels = np.load("/home/robust/Desktop/diffusion-point-cloud-main/layer_data/test/input_label_test.npy")
-            if self.layer_name == "original":
-                self.layer_data = np.load(f"/home/robust/Desktop/diffusion-point-cloud-main/layer_data/test/input_data_test.npy")
-            else:
-                self.layer_data = np.load(f"/home/robust/Desktop/diffusion-point-cloud-main/layer_data/test/{self.layer_name}_test.npy")
-
-        self.mean = np.zeros((self.layer_data.shape[0], self.layer_data.shape[2]))
-        self.std = np.zeros(self.layer_data.shape[0])
-
-    def __len__(self):
-        return len(self.labels)
-
-    def __getitem__(self, idx):
-        data = self.layer_data[idx]
-        label = self.labels[idx]
-        
-        if self.standardize:
-            mean = np.mean(data, axis=0)
-            data -= mean
-            std = np.std(data)
-            data /= std
-            
-            self.mean[idx] = mean
-            self.std[idx] = std
-        
-        if self.zero_pad == 256:
-            dim_gap = 256 - data.shape[-1]
-            data = np.concatenate((data, np.zeros((data.shape[0], dim_gap), dtype=np.float32)), axis=1)
-        else: data = data
-        
-        if self.transform:
-            data = self.transform(data)
-        
-        return data, label
-    
-class ModelNet40(Dataset):
-    def __init__(self, num_points, partition='train'):
-        if partition in ['train','val']:
-            self.data, self.label = self.__load_data("train")
-        else:
-            self.data, self.label = self.__load_data(partition)
-            
-        mask = np.random.permutation(len(self.label))        
-        if partition=="val": 
-            mask = mask[len(mask)*9//10:len(mask)]
-            self.data, self.label = self.data[mask], self.label[mask]
-        elif partition=="train": 
-            # mask = mask[0:len(mask)*4//5]
-            mask = mask[:]
-            self.data, self.label = self.data[mask], self.label[mask]
-            
-        self.num_points = num_points
-        self.partition = partition        
-
-    def __getitem__(self, item):
-        pointcloud = self.data[item][:self.num_points]
-        label = self.label[item]
-        if self.partition in ['train', 'val']:
-            pointcloud = self.__translate_pointcloud(pointcloud)
-            np.random.shuffle(pointcloud)
-        return pointcloud, label
-
-    def __len__(self):
-        return self.data.shape[0]
-    
-    def __load_data(self, partition):
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        DATA_DIR = os.path.join(BASE_DIR, '../data')
-        all_data = []
-        all_label = []
-        for h5_name in glob.glob(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048', 'ply_data_%s*.h5'%partition)):
-            f = h5py.File(h5_name)
-            data = f['data'][:].astype('float32')
-            label = f['label'][:].astype('int64')
-            f.close()
-            all_data.append(data)
-            all_label.append(label)
-        all_data = np.concatenate(all_data, axis=0)
-        all_label = np.concatenate(all_label, axis=0)
-        return all_data, all_label
-        
-    def __translate_pointcloud(self, pointcloud):
-        xyz1 = np.random.uniform(low=2./3., high=3./2., size=[3])
-        xyz2 = np.random.uniform(low=-0.2, high=0.2, size=[3])
-        
-        translated_pointcloud = np.add(np.multiply(pointcloud, xyz1), xyz2).astype('float32')
-        return translated_pointcloud
-
-
-    def __jitter_pointcloud(self, pointcloud, sigma=0.01, clip=0.02):
-        N, C = pointcloud.shape
-        pointcloud += np.clip(sigma * np.random.randn(N, C), -1*clip, clip)
-        return pointcloud
-    
-    
-class ModelNet40C(Dataset):
-    def __init__(self, split="test", test_data_path="../data/modelnet40_c",corruption=None,severity=None):
-        assert split == 'test'
-        self.split = split
-        self.data_path = {
-            "test":  test_data_path
-        }[self.split]
-        assert corruption in ["background", "cutout", "density", "density_inc", "distortion", "distortion_rbf", "distortion_rbf_inv",
-                              "gaussian", "impulse", "lidar", "occlusion", "rotation", "shear", "uniform", "upsampling"]
-        assert severity in [1,2,3,4,5]
-        self.corruption = corruption
-        self.severity = severity
-
-        self.data, self.label = self.__load_data(self.data_path, self.corruption, self.severity)
-        # self.num_points = num_points
-        self.partition =  'test'
-
-    def __getitem__(self, item):
-        pointcloud = self.data[item]#[:self.num_points]
-        label = self.label[item]
-        # return {'pc': pointcloud, 'label': label.item()}
-        return pointcloud, label.item()
-
-    def __len__(self):
-        return self.data.shape[0]
-    
-    def __load_data(self, data_path,corruption,severity):
-
-        DATA_DIR = os.path.join(data_path, 'data_' + corruption + '_' +str(severity) + '.npy')
-        # if corruption in ['occlusion']:
-        #     LABEL_DIR = os.path.join(data_path, 'label_occlusion.npy')
-        LABEL_DIR = os.path.join(data_path, 'label.npy')
-        all_data = np.load(DATA_DIR)
-        all_label = np.load(LABEL_DIR)
-        return all_data, all_label
-
 
 def normalize_points_np(points):
     """points: [K, 3]"""

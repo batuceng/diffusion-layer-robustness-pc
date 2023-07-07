@@ -4,6 +4,7 @@ import argparse
 import torch
 from tqdm.auto import tqdm
 
+from data.modelnet40 import ModelNet40
 from utils.dataset import *
 from utils.misc import *
 from utils.data import *
@@ -17,8 +18,6 @@ parser.add_argument('--ckpt', type=str, default='./pretrained/AE_airplane.pt')
 parser.add_argument('--categories', type=str_list, default=['airplane'])
 parser.add_argument('--save_dir', type=str, default='./results')
 parser.add_argument('--device', type=str, default='cuda')
-parser.add_argument('--test_mode', type=str, default='custom')
-
 # Datasets and loaders
 parser.add_argument('--dataset_path', type=str, default='./data/shapenet.hdf5')
 parser.add_argument('--batch_size', type=int, default=128)
@@ -37,20 +36,26 @@ ckpt = torch.load(args.ckpt)
 seed_all(ckpt['args'].seed)
 
 # Datasets and loaders
+logger.info('Loading datasets...')
 
-if args.test_mode == "test_ae_defualt":
-    logger.info('Loading datasets...')
+# Pass from args
+dataset_name = "modelnet"
+
+if dataset_name == "shapenet":
     test_dset = ShapeNetCore(
         path=args.dataset_path,
         cates=args.categories,
         split='test',
         scale_mode=ckpt['args'].scale_mode
     )
-    test_loader = DataLoader(test_dset, batch_size=args.batch_size, num_workers=0)
-else:
-    test_dset = Layer1("x1", split="test")
-    test_loader = DataLoader(test_dset, batch_size=args.batch_size, num_workers=0)
+elif dataset_name == "modelnet":
+    test_dset = ModelNet40(
+        partition='test',
+        scale_mode=ckpt['args'].scale_mode,
+        num_points=ckpt['args'].num_points
+    )
 
+test_loader = DataLoader(test_dset, batch_size=args.batch_size, num_workers=0)
 
 # Model
 logger.info('Loading model...')

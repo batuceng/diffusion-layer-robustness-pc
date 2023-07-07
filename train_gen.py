@@ -125,7 +125,7 @@ def train(it):
     # Load data
     batch = next(train_iter)
     x = batch['pointcloud'].to(args.device)
-    
+
     # Reset grad and model state
     optimizer.zero_grad()
     model.train()

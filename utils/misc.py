@@ -110,16 +110,8 @@ def seed_all(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-    
-def set_all_seeds(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    
-    
+
+
 def get_logger(name, log_dir=None):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)

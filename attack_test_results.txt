@@ -1,3 +1,0 @@
-t=8, all layers denoised, PGD attack, 0.4335 test acc
-t=8, no denoising, PGD attack, 0.3748 test acc
-t=8, all layers denoised, Clean test set, 0.9153 test acc

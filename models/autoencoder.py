@@ -7,13 +7,12 @@ from .diffusion import *
 
 class AutoEncoder(Module):
 
-    def __init__(self, args, layer_dim=3):
+    def __init__(self, args):
         super().__init__()
         self.args = args
-        self.layer_dim = layer_dim
-        self.encoder = PointNetEncoder(zdim=args.latent_dim, input_dim=self.layer_dim)
+        self.encoder = PointNetEncoder(zdim=args.latent_dim)
         self.diffusion = DiffusionPoint(
-            net = PointwiseNet(point_dim=self.layer_dim, context_dim=args.latent_dim, residual=args.residual),
+            net = PointwiseNet(point_dim=3, context_dim=args.latent_dim, residual=args.residual),
             var_sched = VarianceSchedule(
                 num_steps=args.num_steps,
                 beta_1=args.beta_1,
@@ -30,37 +29,14 @@ class AutoEncoder(Module):
         code, _ = self.encoder(x)
         return code
 
-    def decode(self, code, num_points, flexibility=0.0, ret_traj=False, layer_name="original"):
-        return self.diffusion.sample(num_points, code, self.layer_dim, flexibility=flexibility, ret_traj=ret_traj, layer_name=layer_name)
-
-    def get_loss(self, x, layer_name):
-        code = self.encode(x)
-        loss = self.diffusion.get_loss(x, code, t=None, layer_name=layer_name)
-        return loss
-
-    def denoiser(self, pointcloud, t, flexibility=0.0, ret_traj=False, context=None, layer_name="original"):
-        return self.diffusion.truncated_sample(pointcloud, t, context=context, layer_name=layer_name)
+    def decode(self, code, num_points, flexibility=0.0, ret_traj=False):
+        return self.diffusion.sample(num_points, code, flexibility=flexibility, ret_traj=ret_traj)
     
-    # Do the denoising
-    def denoise_layer(self, x, t=5, layer_name="original"):
-        standart_dict = {"original":False, "x1":True, "x2":True, "x3":True, "x4":True, "random":True}
-        x = x.transpose(1, 2)
-        
-        if standart_dict[layer_name]:    
-            #Normalize
-            mean = torch.mean(x, axis=1, keepdim=True)
-            x -= mean
-            std = torch.std(x, axis=(1,2), keepdim=True)
-            x /= std
-            
-        # Denoise
-        code = self.encode(x.transpose(1,2))
-        x = self.denoiser(x, t, context=code, layer_name=layer_name)
-        
-        if standart_dict[layer_name]:
-            # Denormalize
-            x *= std
-            x += mean
-            
-        x = x.transpose(1, 2)
-        return x
+    # Denoising function, N-step backward diffusion
+    def denoiser(self, pointcloud, t, flexibility=0.0, ret_traj=False, context=None):
+        return self.diffusion.truncated_sample(pointcloud, t, context=context)
+
+    def get_loss(self, x):
+        code = self.encode(x)
+        loss = self.diffusion.get_loss(x, code)
+        return loss

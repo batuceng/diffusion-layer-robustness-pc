@@ -1,0 +1,13 @@
+Saliency drop 200 on DGCNN : Test :: test acc: 0.581442, test avg acc: 0.494756
+
+Drop 100 Test :: test acc: 0.747974, test avg acc: 0.635192
+
+PGD on DGCNN 50 iter : 0.02
+PGD on DGCNN 10 iter : 0.11
+PGD on DGCNN 50 iter 1.25 budget : 0.038
+
+CW perturb on DGCNN 500 iter : Test :: test acc: 0.000000, test avg acc: 0.000000
+
+Clean dgcnn : Test :: test acc: 0.900729, test avg acc: 0.862552
+
+t = 10 denoising dgcnn with 1.6m iter autoencoder : Test :: test acc: 0.805511, test avg acc: 0.704244

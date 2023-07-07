@@ -40,7 +40,7 @@ class CWPerturb:
         self.binary_step = binary_step
         self.num_iter = num_iter
 
-    def attack(self, data, target):
+    def attack(self, data, target, *args, **kwargs):
         """Attack on given data to target.
 
         Args:
@@ -162,7 +162,7 @@ class CWPerturb:
                     current_weight[e] = (lower_bound[e] + upper_bound[e]) / 2.
 
             torch.cuda.empty_cache()
-
+        
         # end of CW attack
         # fail to attack some examples
         # just assign them with last time attack data
@@ -172,4 +172,5 @@ class CWPerturb:
         # return final results
         success_num = (lower_bound > 0.).sum()
         print('Successfully attack {}/{}'.format(success_num, B))
-        return o_bestdist, o_bestattack.transpose((0, 2, 1)), success_num
+        
+        return torch.tensor(o_bestattack.transpose((0, 2, 1))).type(torch.cuda.FloatTensor), (success_num, o_bestdist)

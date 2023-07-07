@@ -1,0 +1,8 @@
+tensorboard
+tqdm
+h5py
+scipy
+scikit-learn
+jupyter
+matplotlib
+ipympl

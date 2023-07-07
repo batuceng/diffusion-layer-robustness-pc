@@ -5,7 +5,7 @@ Related paper: CVPR'20 GvG-P,
 
 import torch
 import numpy as np
-
+import torch.nn.functional as F
 
 class FGM:
     """Class for FGM attack.
@@ -67,7 +67,7 @@ class FGM:
                 grad = grad / (norm[:, None, None] + 1e-9)
         return grad, pred
 
-    def attack(self, data, target):
+    def attack(self, data, target, *args, **kwargs):
         """One step FGM attack.
 
         Args:
@@ -77,7 +77,7 @@ class FGM:
         data = data.float().cuda().detach()
         pc = data.clone().detach().transpose(1, 2).contiguous()
         target = target.long().cuda()
-
+        
         # gradient
         normalized_grad, _ = self.get_gradient(pc, target)  # [B, 3, K]
         perturbation = normalized_grad * self.budget
@@ -120,7 +120,7 @@ class IFGM(FGM):
         self.step_size = step_size
         self.num_iter = num_iter
 
-    def attack(self, data, target):
+    def attack(self, data, target, *args, **kwargs):
         """Iterative FGM attack.
 
         Args:
@@ -189,7 +189,7 @@ class MIFGM(FGM):
         self.num_iter = num_iter
         self.mu = mu
 
-    def attack(self, data, target):
+    def attack(self, data, target, *args, **kwargs):
         """Momentum enhanced iterative FGM attack.
 
         Args:
@@ -226,6 +226,7 @@ class MIFGM(FGM):
 
             # add perturbation and clip
             with torch.no_grad():
+                print(self.get_norm(perturbation))
                 pc = pc - perturbation
                 pc = self.clip_func(pc, ori_pc)
 
@@ -263,7 +264,7 @@ class PGD(IFGM):
                                   budget, step_size, num_iter,
                                   dist_metric)
 
-    def attack(self, data, target):
+    def attack(self, data, target, *args, **kwargs):
         """PGD attack.
 
         Args:
@@ -288,6 +289,61 @@ class Identity_Attack:
     def __init__(self):
         pass
     
-    def attack(self, data, target):
+    def attack(self, data, target, *args, **kwargs):
         success_num = 0
         return data, success_num
+    
+    
+class PGD_PointDP:
+    def __init__(self, model, step=7, eps=0.05, alpha=0.01, p=np.inf):
+        self.model = model
+        self.step = step
+        self.eps = eps
+        self.alpha = alpha
+        self.p = p
+    
+    def attack(self, data, target_label=None, label=None, scale=None, shift=None):
+        self.model.eval()
+        # keep data_og as original
+        data = data.transpose(1, 2).contiguous()
+        data_og = data.cuda()
+        data = data_og.clone()
+        scale = scale.cuda()
+        shift = shift.cuda()
+        eps = (self.eps / scale).expand(-1,data.shape[1],data.shape[2])
+        alpha = (self.alpha / scale).expand(-1,data.shape[1],data.shape[2])
+        
+        adv_data=data.clone().cuda()
+        # initialize random perturbation, use 0.05 by default 
+        adv_data=adv_data+(torch.rand_like(adv_data)*0.05*2-0.05) 
+        adv_data.detach()
+        adv_data_batch = {}
+        batchsize = data.shape[0]
+        
+        for i in range(self.step):
+            if i % 10 == 0:
+                print("Iter", i, "/", self.step)
+            adv_data.requires_grad=True
+            adv_data_batch['pc'] = adv_data
+            adv_data_batch['label'] = label.cuda()
+            self.model.zero_grad()
+            
+            out = self.model(adv_data_batch['pc'])
+            loss = F.cross_entropy(out, adv_data_batch['label'], reduction='mean')
+            loss.backward()
+            with torch.no_grad():
+                if self.p==np.inf:
+                    adv_data = adv_data + alpha * adv_data.grad.sign()
+                    delta = adv_data-data_og
+                    delta = torch.clamp(delta, -eps,eps)
+                else:
+                    adv_data = adv_data + alpha * adv_data.grad
+                    delta = adv_data-data_og
+                    normVal = torch.norm(delta.view(batchsize, -1), self.p, 1).view(batchsize, 1, 1)
+                    mask = normVal<=eps[:,0,0].view(batchsize, 1, 1)
+                    scaling = eps[:,0,0].view(batchsize, 1, 1) / normVal
+                    scaling[mask] = 1
+                    delta = delta*scaling
+                adv_data = (data+delta).detach_()
+                
+        return adv_data.type(torch.cuda.FloatTensor).transpose(1, 2).contiguous(), 0
