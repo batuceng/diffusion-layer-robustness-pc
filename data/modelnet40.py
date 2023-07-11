@@ -82,7 +82,7 @@ class ModelNet40(Dataset):
         self.num_points = num_points
         self.partition = partition
         self.stats = self.get_statistics()
-        assert scale_mode is None or scale_mode in ("None", 'global_unit', 'shape_unit', 'shape_bbox', 'shape_half', 'shape_34')
+        assert scale_mode is None or scale_mode in ("none", 'global_unit', 'shape_unit', 'shape_bbox', 'shape_half', 'shape_34')
         self.scale_mode = scale_mode
         self.pointclouds = []
         self.normalize()

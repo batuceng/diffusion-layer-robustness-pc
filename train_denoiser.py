@@ -12,8 +12,10 @@ from utils.transform import *
 from models.autoencoder import *
 from evaluation import EMD_CD
 from data.modelnet40 import ModelNet40
-
+from models.dgcnn import PointNet, DGCNN_cls, Identity
 import time
+
+
 # Arguments
 parser = argparse.ArgumentParser()
 # Model arguments
@@ -27,10 +29,10 @@ parser.add_argument('--residual', type=eval, default=True, choices=[True, False]
 parser.add_argument('--resume', type=str, default=None)
 
 # Datasets and loaders
-parser.add_argument('--dataset_path', type=str, default='./data/shapenet.hdf5')
+parser.add_argument('--dataset', type=str, default='modelnet40', metavar='N',
+                    choices=['modelnet40'])
 parser.add_argument('--num_points', type=int, default=1024)
-parser.add_argument('--categories', type=str_list, default=['airplane'])
-parser.add_argument('--scale_mode', type=str, default='shape_unit')
+parser.add_argument('--scale_mode', type=str, default='none')  # Use none for DGCNN
 parser.add_argument('--train_batch_size', type=int, default=128)
 parser.add_argument('--val_batch_size', type=int, default=32)
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
@@ -47,13 +49,28 @@ parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
 parser.add_argument('--seed', type=int, default=2020)
 parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
 parser.add_argument('--log_root', type=str, default='./logs_ae')
-parser.add_argument('--device', type=str, default='cuda')
+parser.add_argument('--device', type=str, default='cuda', choices=['cuda', 'cpu'])
 parser.add_argument('--max_iters', type=int, default=float('inf'))
 parser.add_argument('--val_freq', type=float, default=1000)
 parser.add_argument('--tag', type=str, default=None)
 parser.add_argument('--num_val_batches', type=int, default=-1)
 parser.add_argument('--num_inspect_batches', type=int, default=1)
 parser.add_argument('--num_inspect_pointclouds', type=int, default=4)
+
+# Classifier Args
+parser.add_argument('--layer-no', type=int, default=0, choices=[0, 1, 2, 3, 4])
+parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+                    choices=['pointnet', 'dgcnn'],
+                    help='Model to use, [pointnet, dgcnn]')
+parser.add_argument('--dropout', type=float, default=0.5,
+                    help='initial dropout rate')
+parser.add_argument('--emb_dims', type=int, default=1024, metavar='N',
+                    help='Dimension of embeddings')
+parser.add_argument('--k', type=int, default=20, metavar='N',
+                    help='Num of nearest neighbors to use')
+parser.add_argument('--model_path', type=str, default='pretrained/model_original.1024.t7', metavar='N',
+                    help='Pretrained model path')
+
 args = parser.parse_args()
 seed_all(args.seed)
 
@@ -70,48 +87,35 @@ else:
 logger.info(args)
 
 # Datasets and loaders
+if args.dataset == "modelnet40":
+    train_dset = ModelNet40(partition='train', scale_mode=args.scale_mode, num_points=args.num_points)
+                            
+    train_iter = get_data_iterator(DataLoader(
+        train_dset,
+        batch_size=args.train_batch_size,
+        num_workers=0,
+    ))
 
-train_dset = ModelNet40(partition='train', scale_mode=args.scale_mode, num_points=args.num_points)
-                        
-train_iter = get_data_iterator(DataLoader(
-    train_dset,
-    batch_size=args.train_batch_size,
-    num_workers=0,
-))
+    test_loader = DataLoader(ModelNet40(partition='test', scale_mode=args.scale_mode, num_points=args.num_points), num_workers=8,
+                                batch_size=args.val_batch_size, shuffle=True, drop_last=False)
+else:
+    raise Exception("Unavailable Dataset!")
 
-test_loader = DataLoader(ModelNet40(partition='test', scale_mode=args.scale_mode, num_points=args.num_points), num_workers=8,
-                            batch_size=args.val_batch_size, shuffle=True, drop_last=False)
+# Device
+device = torch.device("cuda" if (torch.cuda.is_available() and args.device=="cuda") else "cpu")
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Classification Model
+if args.model == 'pointnet':
+    cls_model = PointNet().to(device)
+elif args.model == 'dgcnn':
+    cls_model = DGCNN_cls(args).to(device)
+    input_dim_dict = {0:3, 1:64, 2:64, 3:128, 4:256}
+else:
+    raise Exception("Not implemented")
+args.input_dim = input_dim_dict[args.layer_no]
 
-args.input_dim = 3
-
-# transform = None
-# if args.rotate:
-#     transform = RandomRotate(180, ['pointcloud'], axis=1)
-# logger.info('Transform: %s' % repr(transform))
-# logger.info('Loading datasets...')
-# train_dset = ShapeNetCore(
-#     path=args.dataset_path,
-#     cates=args.categories,
-#     split='train',
-#     scale_mode=args.scale_mode,
-#     transform=transform,
-# )
-# val_dset = ShapeNetCore(
-#     path=args.dataset_path,
-#     cates=args.categories,
-#     split='val',
-#     scale_mode=args.scale_mode,
-#     transform=transform,
-# )
-# train_iter = get_data_iterator(DataLoader(
-#     train_dset,
-#     batch_size=args.train_batch_size,
-#     num_workers=0,
-# ))
-# val_loader = DataLoader(val_dset, batch_size=args.val_batch_size, num_workers=0)
-
+# Denoiser
+denoiser = Identity()
 
 # Model
 logger.info('Building model...')
@@ -138,23 +142,58 @@ scheduler = get_linear_scheduler(
     end_lr=args.end_lr
 )
 
+
+
+def normalize_layer_data(data, normalization="unit_shape"):
+    # if normalization == "unit_shape":
+        # data.shape = [B, N, D]
+    shift = data.mean(dim=1, keepdim=True) # (B, 1, D)
+    scale = data.std(dim=[1,2], keepdim=True) # (B, 1, 1)
+    data = (data - shift) / scale # Normalize layer data
+    return data, shift, scale
+
+def get_layer_data(batch, layer_no):
+    # time1 = time.time()
+    data = batch['pointcloud'].to(args.device)
+    # time2 = time.time()
+    # print(f"Get data {time2-time1}")
+    
+    cls_model.eval()
+    with torch.no_grad():
+        # CLS forward
+        _, data = cls_model.forward_denoised(data.permute(0,2,1), denoiser)
+        # time3 = time.time()
+        # print(f"Forward denoise {time3-time2}")
+        data = data[layer_no]
+        # time4 = time.time()
+        # print(f"to device {time4-time3}")
+        data = data.permute(0,2,1).to(device)
+        # time5 = time.time()
+        # print(f"Permute {time5-time4}")
+        # Normalize
+        _ = normalize_layer_data(data)
+        # print(f"Normalization denoise {time.time()-time5}")
+        return _
+    
+
 # Train, validate 
 def train(it):
     # Load data
-    time1 = time.time()
-    
     batch = next(train_iter)
-    x = batch['pointcloud'].to(args.device)
+    
+    # Get Layer Data
+    x, shift, scale = get_layer_data(batch, layer_no= args.layer_no)
+    
 
     # Reset grad and model state
     optimizer.zero_grad()
     model.train()
 
+    # print(f"shape x: {x.shape, x.device}")
     # Forward
-    print(f"shape x: {x.shape, x.device}")
+    time1 = time.time()
     loss = model.get_loss(x)
     print(time.time()-time1)
-    
     # Backward and optimize
     loss.backward()
     orig_grad_norm = clip_grad_norm_(model.parameters(), args.max_grad_norm)
@@ -174,9 +213,9 @@ def validate_loss(it):
     for i, batch in enumerate(tqdm(test_loader, desc='Validate')):
         if args.num_val_batches > 0 and i >= args.num_val_batches:
             break
-        ref = batch['pointcloud'].to(args.device)
-        shift = batch['shift'].to(args.device)
-        scale = batch['scale'].to(args.device)
+        # Get Layer Data
+        ref, shift, scale = get_layer_data(batch, layer_no= args.layer_no)
+        
         with torch.no_grad():
             model.eval()
             code = model.encode(ref)
@@ -200,7 +239,7 @@ def validate_inspect(it):
     sum_n = 0
     sum_chamfer = 0
     for i, batch in enumerate(tqdm(test_loader, desc='Inspect')):
-        x = batch['pointcloud'].to(args.device)
+        x, shift, scale = get_layer_data(batch, layer_no= args.layer_no)
         model.eval()
         code = model.encode(x)
         recons = model.decode(code, x.size(1), flexibility=args.flexibility).detach()

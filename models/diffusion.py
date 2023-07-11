@@ -4,7 +4,7 @@ from torch.nn import Module, Parameter, ModuleList
 import numpy as np
 
 from .common import *
-
+import time
 
 class VarianceSchedule(Module):
 
@@ -56,12 +56,12 @@ class PointwiseNet(Module):
         self.act = F.leaky_relu
         self.residual = residual
         self.layers = ModuleList([
-            ConcatSquashLinear(3, 128, context_dim+3),
+            ConcatSquashLinear(point_dim, 128, context_dim+3),
             ConcatSquashLinear(128, 256, context_dim+3),
             ConcatSquashLinear(256, 512, context_dim+3),
             ConcatSquashLinear(512, 256, context_dim+3),
             ConcatSquashLinear(256, 128, context_dim+3),
-            ConcatSquashLinear(128, 3, context_dim+3)
+            ConcatSquashLinear(128, point_dim, context_dim+3)
         ])
 
     def forward(self, x, beta, context):
@@ -103,19 +103,34 @@ class DiffusionPoint(Module):
             x_0:  Input point cloud, (B, N, d).
             context:  Shape latent, (B, F).
         """
+        # start_timer = time.time()
+        # print(f"X0 shape: {x_0.shape} device: {x_0.device}")
+        # print(f"self.alpha_bars[t] shape: {self.var_sched.alpha_bars} device: {self.var_sched.alpha_bars.device}")
         batch_size, _, point_dim = x_0.size()
         if t == None:
             t = self.var_sched.uniform_sample_t(batch_size)
+        # t_timer = time.time()
+        # print(f"T timer: {t_timer-start_timer}")
         alpha_bar = self.var_sched.alpha_bars[t]
+        # alpha_timer = time.time()
+        # print(f"Alpha timer: {alpha_timer-t_timer}")
         beta = self.var_sched.betas[t]
+        # beta_timer = time.time()
+        # print(f"Beta timer: {beta_timer-alpha_timer}")
 
         c0 = torch.sqrt(alpha_bar).view(-1, 1, 1)       # (B, 1, 1)
         c1 = torch.sqrt(1 - alpha_bar).view(-1, 1, 1)   # (B, 1, 1)
-
+        # c_timer = time.time()
+        # print(f"C timer: {c_timer-beta_timer}")        
+        
         e_rand = torch.randn_like(x_0)  # (B, N, d)
         e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context=context)
-
+        # e_timer = time.time()
+        # print(f"E timer: {e_timer-c_timer}")
+        
         loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
+        # loss_timer = time.time()
+        # print(f"Loss timer: {loss_timer-e_timer}")
         return loss
 
     def sample(self, num_points, context, point_dim=3, flexibility=0.0, ret_traj=False):

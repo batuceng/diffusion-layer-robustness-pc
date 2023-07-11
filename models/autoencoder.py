@@ -3,16 +3,16 @@ from torch.nn import Module
 
 from .encoders import *
 from .diffusion import *
-
+import time
 
 class AutoEncoder(Module):
 
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.encoder = PointNetEncoder(zdim=args.latent_dim)
+        self.encoder = PointNetEncoder(zdim=args.latent_dim, input_dim=args.input_dim)
         self.diffusion = DiffusionPoint(
-            net = PointwiseNet(point_dim=3, context_dim=args.latent_dim, residual=args.residual),
+            net = PointwiseNet(point_dim=args.input_dim, context_dim=args.latent_dim, residual=args.residual),
             var_sched = VarianceSchedule(
                 num_steps=args.num_steps,
                 beta_1=args.beta_1,
@@ -37,6 +37,13 @@ class AutoEncoder(Module):
         return self.diffusion.truncated_sample(pointcloud, t, context=context)
 
     def get_loss(self, x):
+        # start = time.time()
         code = self.encode(x)
+        # encoding = time.time()
+        # print(f"Encoding: {encoding-start}")
         loss = self.diffusion.get_loss(x, code)
+        # getting_loss = time.time()
+        # print(f"Getting loss: {getting_loss-encoding}")
+        
         return loss
+    
