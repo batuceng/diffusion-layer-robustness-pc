@@ -165,24 +165,28 @@ class DGCNN_cls(nn.Module):
         x = self.conv1(x)                       # (batch_size, 3*2, num_points, k) -> (batch_size, 64, num_points, k)
         x1 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
         x1 = denoiser(data=x1, layer=1)             # Denoise Layer 1
+        layer_data.append(x1.clone().detach().requires_grad_(True))    # Store Layer 0
         # layer_data[1] = x1.clone().detach().cpu()   # Store Layer 1
         
         x = get_graph_feature(x1, k=self.k)     # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
         x = self.conv2(x)                       # (batch_size, 64*2, num_points, k) -> (batch_size, 64, num_points, k)
         x2 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
         x2 = denoiser(data=x2, layer=2)             # Denoise Layer 2
+        layer_data.append(x2.clone().detach().requires_grad_(True))    # Store Layer 0
         # layer_data[2] = x2.clone().detach().cpu()   # Store Layer 2
 
         x = get_graph_feature(x2, k=self.k)     # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
         x = self.conv3(x)                       # (batch_size, 64*2, num_points, k) -> (batch_size, 128, num_points, k)
         x3 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 128, num_points, k) -> (batch_size, 128, num_points)
         x3 = denoiser(data=x3, layer=3)             # Denoise Layer 3
+        layer_data.append(x3.clone().detach().requires_grad_(True))    # Store Layer 0
         # layer_data[3] = x3.clone().detach().cpu()   # Store Layer 3
 
         x = get_graph_feature(x3, k=self.k)     # (batch_size, 128, num_points) -> (batch_size, 128*2, num_points, k)
         x = self.conv4(x)                       # (batch_size, 128*2, num_points, k) -> (batch_size, 256, num_points, k)
         x4 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 256, num_points, k) -> (batch_size, 256, num_points)
         x4 = denoiser(data=x4, layer=4)             # Denoise Layer 4
+        layer_data.append(x4.clone().detach().requires_grad_(True))    # Store Layer 0
         # layer_data[4] = x4.clone().detach().cpu()   # Store Layer 4
 
         x = torch.cat((x1, x2, x3, x4), dim=1)  # (batch_size, 64+64+128+256, num_points)

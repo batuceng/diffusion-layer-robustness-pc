@@ -30,7 +30,8 @@ class AutoEncoder(Module):
         return code
 
     def decode(self, code, num_points, flexibility=0.0, ret_traj=False):
-        return self.diffusion.sample(num_points, code, flexibility=flexibility, ret_traj=ret_traj)
+        return self.diffusion.sample(num_points, code, flexibility=flexibility, 
+                                     ret_traj=ret_traj, point_dim=self.args.input_dim)
     
     # Denoising function, N-step backward diffusion
     def denoiser(self, pointcloud, t, flexibility=0.0, ret_traj=False, context=None):

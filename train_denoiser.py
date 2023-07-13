@@ -15,7 +15,6 @@ from data.modelnet40 import ModelNet40
 from models.dgcnn import PointNet, DGCNN_cls, Identity
 import time
 
-
 # Arguments
 parser = argparse.ArgumentParser()
 # Model arguments
@@ -48,7 +47,7 @@ parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
 # Training
 parser.add_argument('--seed', type=int, default=2020)
 parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
-parser.add_argument('--log_root', type=str, default='./logs_ae')
+parser.add_argument('--log_root', type=str, default='./logs/layer1')
 parser.add_argument('--device', type=str, default='cuda', choices=['cuda', 'cpu'])
 parser.add_argument('--max_iters', type=int, default=float('inf'))
 parser.add_argument('--val_freq', type=float, default=1000)
@@ -178,11 +177,14 @@ def get_layer_data(batch, layer_no):
 
 # Train, validate 
 def train(it):
+    start_time = time.time()
     # Load data
     batch = next(train_iter)
+    batch_time = time.time()
     
     # Get Layer Data
     x, shift, scale = get_layer_data(batch, layer_no= args.layer_no)
+    get_layer_time = time.time()
     
 
     # Reset grad and model state
@@ -191,15 +193,20 @@ def train(it):
 
     # print(f"shape x: {x.shape, x.device}")
     # Forward
-    time1 = time.time()
     loss = model.get_loss(x)
-    print(time.time()-time1)
+    get_loss_time = time.time()
+    
+    print(get_loss_time-get_layer_time)
     # Backward and optimize
     loss.backward()
+    backward_time = time.time()
+    
     orig_grad_norm = clip_grad_norm_(model.parameters(), args.max_grad_norm)
     optimizer.step()
     scheduler.step()
-
+    step_time = time.time()
+    
+    
     logger.info('[Train] Iter %04d | Loss %.6f | Grad %.4f ' % (it, loss.item(), orig_grad_norm))
     writer.add_scalar('train/loss', loss, it)
     writer.add_scalar('train/lr', optimizer.param_groups[0]['lr'], it)

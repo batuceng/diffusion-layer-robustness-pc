@@ -128,7 +128,7 @@ class DiffusionPoint(Module):
         # e_timer = time.time()
         # print(f"E timer: {e_timer-c_timer}")
         
-        loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
+        loss = F.mse_loss(e_theta.reshape(-1, point_dim), e_rand.reshape(-1, point_dim), reduction='mean')
         # loss_timer = time.time()
         # print(f"Loss timer: {loss_timer-e_timer}")
         return loss
