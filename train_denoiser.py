@@ -169,23 +169,11 @@ def get_layer_data(batch, layer_no):
 
 # Train, validate 
 def train(it):
-<<<<<<< HEAD
     # Load data
     batch = next(train_iter)
     
     # Get Layer Data
     x, shift, scale = get_layer_data(batch, layer_no= args.layer_no)
-=======
-    # start_time = time.time()
-    # Load data
-    batch = next(train_iter)
-    # batch_time = time.time()
-    
-    # Get Layer Data
-    x, shift, scale = get_layer_data(batch, layer_no=args.layer_no)
-    # get_layer_time = time.time()
-    
->>>>>>> e29ac09e30592191a4965e395b9f1f65676e3335
 
     # Reset grad and model state
     optimizer.zero_grad()
@@ -193,26 +181,13 @@ def train(it):
 
     # Forward
     loss = model.get_loss(x)
-<<<<<<< HEAD
     
     # Backward and optimize
     loss.backward()
-=======
-    # get_loss_time = time.time()
-    
-    # print(get_loss_time-get_layer_time)
-    # Backward and optimize
-    loss.backward()
-    # backward_time = time.time()
->>>>>>> e29ac09e30592191a4965e395b9f1f65676e3335
     
     orig_grad_norm = clip_grad_norm_(model.parameters(), args.max_grad_norm)
     optimizer.step()
     scheduler.step()
-<<<<<<< HEAD
-=======
-    # step_time = time.time()
->>>>>>> e29ac09e30592191a4965e395b9f1f65676e3335
     
     
     logger.info('[Train] Iter %04d | Loss %.6f | Grad %.4f ' % (it, loss.item(), orig_grad_norm))
