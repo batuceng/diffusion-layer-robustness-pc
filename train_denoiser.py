@@ -18,10 +18,10 @@ import time
 # Arguments
 parser = argparse.ArgumentParser()
 # Model arguments
-parser.add_argument('--latent_dim', type=int, default=256)
+parser.add_argument('--latent-dim', type=int, default=256)
 parser.add_argument('--num_steps', type=int, default=200)
-parser.add_argument('--beta_1', type=float, default=1e-4)
-parser.add_argument('--beta_T', type=float, default=0.05)
+parser.add_argument('--beta-1', type=float, default=1e-4)
+parser.add_argument('--beta-T', type=float, default=0.05)
 parser.add_argument('--sched_mode', type=str, default='linear')
 parser.add_argument('--flexibility', type=float, default=0.0)
 parser.add_argument('--residual', type=eval, default=True, choices=[True, False])
@@ -30,31 +30,31 @@ parser.add_argument('--resume', type=str, default=None)
 # Datasets and loaders
 parser.add_argument('--dataset', type=str, default='modelnet40', metavar='N',
                     choices=['modelnet40'])
-parser.add_argument('--num_points', type=int, default=1024)
-parser.add_argument('--scale_mode', type=str, default='none')  # Use none for DGCNN
-parser.add_argument('--train_batch_size', type=int, default=128)
-parser.add_argument('--val_batch_size', type=int, default=32)
+parser.add_argument('--num-points', type=int, default=1024)
+parser.add_argument('--scale-mode', type=str, default='none')  # Use none for DGCNN
+parser.add_argument('--train-batch_size', type=int, default=128)
+parser.add_argument('--val-batch_size', type=int, default=32)
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
 
 # Optimizer and scheduler
 parser.add_argument('--lr', type=float, default=1e-3)
-parser.add_argument('--weight_decay', type=float, default=0)
-parser.add_argument('--max_grad_norm', type=float, default=10)
-parser.add_argument('--end_lr', type=float, default=1e-4)
-parser.add_argument('--sched_start_epoch', type=int, default=150*THOUSAND)
-parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
+parser.add_argument('--weight-decay', type=float, default=0)
+parser.add_argument('--max-grad-norm', type=float, default=10)
+parser.add_argument('--end-lr', type=float, default=1e-4)
+parser.add_argument('--sched-start-epoch', type=int, default=150*THOUSAND)
+parser.add_argument('--sched-end-epoch', type=int, default=300*THOUSAND)
 
 # Training
 parser.add_argument('--seed', type=int, default=2020)
 parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
-parser.add_argument('--log_root', type=str, default='./logs/layer1')
+parser.add_argument('--log-root', type=str, default='./logs/layer1')
 parser.add_argument('--device', type=str, default='cuda', choices=['cuda', 'cpu'])
-parser.add_argument('--max_iters', type=int, default=float('inf'))
-parser.add_argument('--val_freq', type=float, default=1000)
+parser.add_argument('--max-iters', type=int, default=float('inf'))
+parser.add_argument('--val-freq', type=float, default=1000)
 parser.add_argument('--tag', type=str, default=None)
-parser.add_argument('--num_val_batches', type=int, default=-1)
-parser.add_argument('--num_inspect_batches', type=int, default=1)
-parser.add_argument('--num_inspect_pointclouds', type=int, default=4)
+parser.add_argument('--num-val-batches', type=int, default=-1)
+parser.add_argument('--num-inspect-batches', type=int, default=1)
+parser.add_argument('--num-inspect-pointclouds', type=int, default=4)
 
 # Classifier Args
 parser.add_argument('--layer-no', type=int, default=0, choices=[0, 1, 2, 3, 4])
@@ -63,11 +63,11 @@ parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
                     help='Model to use, [pointnet, dgcnn]')
 parser.add_argument('--dropout', type=float, default=0.5,
                     help='initial dropout rate')
-parser.add_argument('--emb_dims', type=int, default=1024, metavar='N',
+parser.add_argument('--emb-dims', type=int, default=1024, metavar='N',
                     help='Dimension of embeddings')
 parser.add_argument('--k', type=int, default=20, metavar='N',
                     help='Num of nearest neighbors to use')
-parser.add_argument('--model_path', type=str, default='pretrained/model_original.1024.t7', metavar='N',
+parser.add_argument('--model-path', type=str, default='pretrained/model.1024.t7', metavar='N',
                     help='Pretrained model path')
 
 args = parser.parse_args()
@@ -113,6 +113,10 @@ else:
     raise Exception("Not implemented")
 args.input_dim = input_dim_dict[args.layer_no]
 
+cls_model = nn.DataParallel(cls_model)
+cls_model.load_state_dict(torch.load(args.model_path))
+cls_model = cls_model.eval()
+
 # Denoiser
 denoiser = Identity()
 
@@ -152,59 +156,40 @@ def normalize_layer_data(data, normalization="unit_shape"):
     return data, shift, scale
 
 def get_layer_data(batch, layer_no):
-    # time1 = time.time()
     data = batch['pointcloud'].to(args.device)
-    # time2 = time.time()
-    # print(f"Get data {time2-time1}")
     
     cls_model.eval()
     with torch.no_grad():
         # CLS forward
-        _, data = cls_model.forward_denoised(data.permute(0,2,1), denoiser)
-        # time3 = time.time()
-        # print(f"Forward denoise {time3-time2}")
+        _, data = cls_model.module.forward_denoised(data.permute(0,2,1), denoiser)
         data = data[layer_no]
-        # time4 = time.time()
-        # print(f"to device {time4-time3}")
         data = data.permute(0,2,1).to(device)
-        # time5 = time.time()
-        # print(f"Permute {time5-time4}")
         # Normalize
         _ = normalize_layer_data(data)
-        # print(f"Normalization denoise {time.time()-time5}")
         return _
     
 
 # Train, validate 
 def train(it):
-    start_time = time.time()
     # Load data
     batch = next(train_iter)
-    batch_time = time.time()
     
     # Get Layer Data
     x, shift, scale = get_layer_data(batch, layer_no= args.layer_no)
-    get_layer_time = time.time()
-    
 
     # Reset grad and model state
     optimizer.zero_grad()
     model.train()
 
-    # print(f"shape x: {x.shape, x.device}")
     # Forward
     loss = model.get_loss(x)
-    get_loss_time = time.time()
     
-    print(get_loss_time-get_layer_time)
     # Backward and optimize
     loss.backward()
-    backward_time = time.time()
     
     orig_grad_norm = clip_grad_norm_(model.parameters(), args.max_grad_norm)
     optimizer.step()
     scheduler.step()
-    step_time = time.time()
     
     
     logger.info('[Train] Iter %04d | Loss %.6f | Grad %.4f ' % (it, loss.item(), orig_grad_norm))

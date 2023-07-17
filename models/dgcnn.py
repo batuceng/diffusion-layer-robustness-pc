@@ -212,4 +212,20 @@ class Identity(nn.Module):
     def forward(self, data, *args, **kwargs):
         return data
     
+class Layer_Denoiser(nn.Module):
+    def __init__(self, model, t):
+        super(Layer_Denoiser, self).__init__()
+        self.model = model
+        self.t = t
     
+    def forward(self, data, layer):
+        if layer == self.model.args.layer_no:
+            with torch.no_grad():
+                data = data.permute((0,2,1))
+                code = self.model.encode(data)
+                # Changed Encode -> Denoiser to call truncated_sample()
+                recons = self.model.denoiser(data, t=self.t, flexibility=self.model.args.flexibility, context=code).detach()
+            return recons.permute((0,2,1))
+        else:
+            return data
+        
