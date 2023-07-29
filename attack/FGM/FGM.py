@@ -315,7 +315,7 @@ class PGD_PointDP:
         
         adv_data=data.clone().cuda()
         # initialize random perturbation, use 0.05 by default 
-        adv_data=adv_data+(torch.rand_like(adv_data)*0.05*2-0.05) 
+        # adv_data=adv_data+(torch.rand_like(adv_data)*0.05*2-0.05) 
         adv_data.detach()
         adv_data_batch = {}
         batchsize = data.shape[0]

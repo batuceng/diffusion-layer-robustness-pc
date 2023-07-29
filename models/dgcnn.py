@@ -159,7 +159,7 @@ class DGCNN_cls(nn.Module):
         layer_data = []                         # Store each layer data
         x = denoiser(data=x, layer=0)               # Denoise Layer 0
         layer_data.append(x.clone().detach().requires_grad_(True))    # Store Layer 0
-            
+        
         # Layer 1
         x = get_graph_feature(x, k=self.k)      # (batch_size, 3, num_points) -> (batch_size, 3*2, num_points, k)
         x = self.conv1(x)                       # (batch_size, 3*2, num_points, k) -> (batch_size, 64, num_points, k)
@@ -203,29 +203,3 @@ class DGCNN_cls(nn.Module):
         x = self.linear3(x)                                             # (batch_size, 256) -> (batch_size, output_channels)
         
         return x, layer_data
-    
-class Identity(nn.Module):
-    def __init__(self, *args, **kwargs):
-        super(Identity, self).__init__()
-        pass
-    
-    def forward(self, data, *args, **kwargs):
-        return data
-    
-class Layer_Denoiser(nn.Module):
-    def __init__(self, model, t):
-        super(Layer_Denoiser, self).__init__()
-        self.model = model
-        self.t = t
-    
-    def forward(self, data, layer):
-        if layer == self.model.args.layer_no:
-            with torch.no_grad():
-                data = data.permute((0,2,1))
-                code = self.model.encode(data)
-                # Changed Encode -> Denoiser to call truncated_sample()
-                recons = self.model.denoiser(data, t=self.t, flexibility=self.model.args.flexibility, context=code).detach()
-            return recons.permute((0,2,1))
-        else:
-            return data
-        

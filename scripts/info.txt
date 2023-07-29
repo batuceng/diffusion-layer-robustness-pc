@@ -1,0 +1,5 @@
+grid.sh : test layer denoiser for various t steps, i j k -> L0 L1 L2
+
+How to run :
+start_time=`date +%s`; ./grid.sh 2>&1 | tee gridlogs.txt ; end_time=`date +%s` ; echo execution time was `expr $end_time - $start_time` s.
+

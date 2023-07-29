@@ -1,28 +1,26 @@
+"""
+Test layer denoisers on point cloud attacked data.
+"""
+
 import os
 import time
 import argparse
 import torch
 from tqdm.auto import tqdm
 
-from utils.dataset import *
-from utils.misc import *
-from utils.data import *
-from models.autoencoder import *
-from evaluation import EMD_CD
+from util.misc import seed_all, IOStream
+from models.autoencoder import AutoEncoder
 
 
 import os
 import argparse
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
-from data.modelnet40 import ModelNet40
-from models.dgcnn import PointNet, DGCNN_cls, Identity, Layer_Denoiser
+from dataset.modelnet40 import ModelNet40
+from models.dgcnn import PointNet, DGCNN_cls
+from models.denoiser import Identity, Layer_Denoiser
 import numpy as np
 from torch.utils.data import DataLoader
-from utils.util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from attack import FGM, IFGM, MIFGM, PGD, Identity_Attack, PGD_PointDP, Drop_PointDP
 from attack import CWKNN, CWAdd
@@ -30,20 +28,19 @@ from attack import CWPerturb
 from attack import SaliencyDrop
 from attack import CrossEntropyAdvLoss, LogitsAdvLoss
 from attack import ClipPointsL2, L2Dist, ChamferkNNDist, ProjectInnerClipLinf
-from utils.dataset import ModelNet40Attack
 
 # Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--ckpt', type=str, default='./logs/layer1/AE_2023_07_17__18_59_23/ckpt_2.301694_1000.pt')
+parser.add_argument('--ckpt', type=str, default='logs/layer2/AE_2023_07_17__20_14_47/ckpt_1.611477_750000.pt')
 parser.add_argument('--t', type=int, default=0)
-parser.add_argument('--categories', type=str_list, default=['airplane'])
+# parser.add_argument('--categories', type=str_list, default=['airplane'])
 parser.add_argument('--save-dir', type=str, default='./denoise_results')
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--exp-logs', type=str, default='experiment_logs')
 parser.add_argument('--test-size', type=int, default=np.inf)
 
 # Datasets and loaders
-parser.add_argument('--dataset-path', type=str, default='./data/shapenet.hdf5')
+# parser.add_argument('--dataset-path', type=str, default='./data/shapenet.hdf5')
 parser.add_argument('--batch-size', type=int, default=32)
 parser.add_argument('--scale-mode', type=str, default='shape_unit')
 
@@ -114,7 +111,7 @@ def test(args, io):
     # test_loader = DataLoader(test_dset, batch_size=args.batch_size, num_workers=0, shuffle=True)
 
     test_loader = DataLoader(ModelNet40(partition='test', num_points=args.num_points, scale_mode=args.scale_mode),
-                            batch_size=args.batch_size, shuffle=True, drop_last=False)
+                            batch_size=args.batch_size, shuffle=False, drop_last=False)
 
     device = torch.device("cuda" if args.cuda else "cpu")
 
@@ -135,11 +132,12 @@ def test(args, io):
     ae = None
     if args.t != 0:
         ckpt = torch.load(args.ckpt)
+        # ckpt["args"].input_dim = 3
+        # ckpt["args"].layer_no = 0
         ae = AutoEncoder(ckpt['args']).to(args.device)
         ae.load_state_dict(ckpt['state_dict'])
         ae.eval()
-
-    
+        
     ###
     attacker = None
     if args.adv_func == 'logits':
@@ -200,6 +198,8 @@ def test(args, io):
     
     all_ref = []
     all_attack = []
+    all_shift = []
+    all_scale = []
     
     # Denoiser
     if ae == None:
@@ -259,6 +259,8 @@ def test(args, io):
         # Save data
         all_ref.append(data.detach().cpu().numpy() * scale.numpy() + shift.numpy())
         all_attack.append(best_pc.cpu().numpy() * scale.numpy() + shift.numpy())
+        all_shift.append(shift.numpy())
+        all_scale.append(scale.numpy())
 
         
         # Save batch
@@ -279,9 +281,13 @@ def test(args, io):
     test_post_attack_pred = np.concatenate(test_post_attack_pred)
     all_ref = np.concatenate(all_ref)
     all_attack = np.concatenate(all_attack)
+    all_shift = np.concatenate(all_shift)
+    all_scale = np.concatenate(all_scale)
     
     np.save(os.path.join("test_attack_outputs", 'ref.npy'), all_ref)
     np.save(os.path.join("test_attack_outputs", 'attack.npy'), all_attack)
+    np.save(os.path.join("test_attack_outputs", 'shift.npy'), all_shift)
+    np.save(os.path.join("test_attack_outputs", 'scale.npy'), all_scale)
     np.savetxt(os.path.join("test_attack_outputs", 'true_label.txt'), test_true)
     np.savetxt(os.path.join("test_attack_outputs", 'target_label.txt'), test_target)
     np.savetxt(os.path.join("test_attack_outputs", 'test_pred.txt'), test_pred)

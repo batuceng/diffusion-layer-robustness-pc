@@ -1,0 +1,642 @@
+Layers : [0, 1, 2]
+T list : [0, 0, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.320312, test avg acc: 0.243290
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.421875, test avg acc: 0.377056
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.539062, test avg acc: 0.501082
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.614646
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.726562, test avg acc: 0.693110
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.601443
+
+
+Layers : [0, 1, 2]
+T list : [0, 5, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.351562, test avg acc: 0.265043
+
+
+Layers : [0, 1, 2]
+T list : [0, 5, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.429688, test avg acc: 0.392929
+
+
+Layers : [0, 1, 2]
+T list : [0, 5, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.546875, test avg acc: 0.521284
+
+
+Layers : [0, 1, 2]
+T list : [0, 5, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.648438, test avg acc: 0.582251
+
+
+Layers : [0, 1, 2]
+T list : [0, 5, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.695312, test avg acc: 0.631782
+
+
+Layers : [0, 1, 2]
+T list : [0, 5, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.703125, test avg acc: 0.669372
+
+
+Layers : [0, 1, 2]
+T list : [0, 10, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.406250, test avg acc: 0.343146
+
+
+Layers : [0, 1, 2]
+T list : [0, 10, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.484375, test avg acc: 0.441991
+
+
+Layers : [0, 1, 2]
+T list : [0, 10, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.554688, test avg acc: 0.539935
+
+
+Layers : [0, 1, 2]
+T list : [0, 10, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.671875, test avg acc: 0.596609
+
+
+Layers : [0, 1, 2]
+T list : [0, 10, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.679688, test avg acc: 0.589574
+
+
+Layers : [0, 1, 2]
+T list : [0, 10, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.718750, test avg acc: 0.644444
+
+
+Layers : [0, 1, 2]
+T list : [0, 15, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.437500, test avg acc: 0.375253
+
+
+Layers : [0, 1, 2]
+T list : [0, 15, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.500000, test avg acc: 0.461472
+
+
+Layers : [0, 1, 2]
+T list : [0, 15, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.609375, test avg acc: 0.574134
+
+
+Layers : [0, 1, 2]
+T list : [0, 15, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.687500, test avg acc: 0.638348
+
+
+Layers : [0, 1, 2]
+T list : [0, 15, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.734375, test avg acc: 0.638203
+
+
+Layers : [0, 1, 2]
+T list : [0, 15, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.695312, test avg acc: 0.620022
+
+
+Layers : [0, 1, 2]
+T list : [0, 20, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.476562, test avg acc: 0.435137
+
+
+Layers : [0, 1, 2]
+T list : [0, 20, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.539062, test avg acc: 0.513961
+
+
+Layers : [0, 1, 2]
+T list : [0, 20, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.656250, test avg acc: 0.622330
+
+
+Layers : [0, 1, 2]
+T list : [0, 20, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.642244
+
+
+Layers : [0, 1, 2]
+T list : [0, 20, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.648438, test avg acc: 0.595851
+
+
+Layers : [0, 1, 2]
+T list : [0, 20, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.577561
+
+
+Layers : [0, 1, 2]
+T list : [0, 25, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.500000, test avg acc: 0.468975
+
+
+Layers : [0, 1, 2]
+T list : [0, 25, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.585938, test avg acc: 0.562302
+
+
+Layers : [0, 1, 2]
+T list : [0, 25, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.648438, test avg acc: 0.623846
+
+
+Layers : [0, 1, 2]
+T list : [0, 25, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.695312, test avg acc: 0.629185
+
+
+Layers : [0, 1, 2]
+T list : [0, 25, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.703125, test avg acc: 0.648449
+
+
+Layers : [0, 1, 2]
+T list : [0, 25, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.571934
+
+
+Layers : [0, 1, 2]
+T list : [0, 30, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.578125, test avg acc: 0.534740
+
+
+Layers : [0, 1, 2]
+T list : [0, 30, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.585938, test avg acc: 0.544553
+
+
+Layers : [0, 1, 2]
+T list : [0, 30, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.632812, test avg acc: 0.583261
+
+
+Layers : [0, 1, 2]
+T list : [0, 30, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.710938, test avg acc: 0.637302
+
+
+Layers : [0, 1, 2]
+T list : [0, 30, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.695312, test avg acc: 0.634307
+
+
+Layers : [0, 1, 2]
+T list : [0, 30, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.679688, test avg acc: 0.559812
+
+
+Layers : [0, 1, 2]
+T list : [0, 35, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.593750, test avg acc: 0.542100
+
+
+Layers : [0, 1, 2]
+T list : [0, 35, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.617188, test avg acc: 0.591991
+
+
+Layers : [0, 1, 2]
+T list : [0, 35, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.679688, test avg acc: 0.631710
+
+
+Layers : [0, 1, 2]
+T list : [0, 35, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.592136
+
+
+Layers : [0, 1, 2]
+T list : [0, 35, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.593903
+
+
+Layers : [0, 1, 2]
+T list : [0, 35, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.648438, test avg acc: 0.570130
+
+
+Layers : [0, 1, 2]
+T list : [0, 40, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.585938, test avg acc: 0.545815
+
+
+Layers : [0, 1, 2]
+T list : [0, 40, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.656250, test avg acc: 0.611291
+
+
+Layers : [0, 1, 2]
+T list : [0, 40, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.679688, test avg acc: 0.611039
+
+
+Layers : [0, 1, 2]
+T list : [0, 40, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.703125, test avg acc: 0.641595
+
+
+Layers : [0, 1, 2]
+T list : [0, 40, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.679688, test avg acc: 0.621212
+
+
+Layers : [0, 1, 2]
+T list : [0, 40, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.617188, test avg acc: 0.540043
+
+
+Layers : [0, 1, 2]
+T list : [0, 45, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.593750, test avg acc: 0.549784
+
+
+Layers : [0, 1, 2]
+T list : [0, 45, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.648438, test avg acc: 0.613745
+
+
+Layers : [0, 1, 2]
+T list : [0, 45, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.656250, test avg acc: 0.576587
+
+
+Layers : [0, 1, 2]
+T list : [0, 45, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.679688, test avg acc: 0.599134
+
+
+Layers : [0, 1, 2]
+T list : [0, 45, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.671875, test avg acc: 0.605700
+
+
+Layers : [0, 1, 2]
+T list : [0, 45, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.648438, test avg acc: 0.593038
+
+
+Layers : [0, 1, 2]
+T list : [0, 50, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.632812, test avg acc: 0.570346
+
+
+Layers : [0, 1, 2]
+T list : [0, 50, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.671875, test avg acc: 0.611833
+
+
+Layers : [0, 1, 2]
+T list : [0, 50, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.648438, test avg acc: 0.576154
+
+
+Layers : [0, 1, 2]
+T list : [0, 50, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.656250, test avg acc: 0.577453
+
+
+Layers : [0, 1, 2]
+T list : [0, 50, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.664062, test avg acc: 0.598846
+
+
+Layers : [0, 1, 2]
+T list : [0, 50, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.617188, test avg acc: 0.574387
+
+
+Layers : [0, 1, 2]
+T list : [0, 55, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.671875, test avg acc: 0.614827
+
+
+Layers : [0, 1, 2]
+T list : [0, 55, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.679688, test avg acc: 0.648846
+
+
+Layers : [0, 1, 2]
+T list : [0, 55, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.640625, test avg acc: 0.575577
+
+
+Layers : [0, 1, 2]
+T list : [0, 55, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.695312, test avg acc: 0.640332
+
+
+Layers : [0, 1, 2]
+T list : [0, 55, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.656250, test avg acc: 0.578932
+
+
+Layers : [0, 1, 2]
+T list : [0, 55, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.632812, test avg acc: 0.557973
+
+
+Layers : [0, 1, 2]
+T list : [10, 0, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.765625, test avg acc: 0.700613
+
+
+Layers : [0, 1, 2]
+T list : [10, 0, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.804688, test avg acc: 0.733983
+
+
+Layers : [0, 1, 2]
+T list : [10, 0, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.796875, test avg acc: 0.729654
+
+
+Layers : [0, 1, 2]
+T list : [10, 0, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.781250, test avg acc: 0.723449
+
+
+Layers : [0, 1, 2]
+T list : [10, 0, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.726562, test avg acc: 0.673196
+
+
+Layers : [0, 1, 2]
+T list : [10, 0, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.656250, test avg acc: 0.575036
+
+
+Layers : [0, 1, 2]
+T list : [10, 5, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.781250, test avg acc: 0.723341
+
+
+Layers : [0, 1, 2]
+T list : [10, 5, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.765625, test avg acc: 0.700072
+
+
+Layers : [0, 1, 2]
+T list : [10, 5, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.765625, test avg acc: 0.672835
+
+
+Layers : [0, 1, 2]
+T list : [10, 5, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.726562, test avg acc: 0.667929
+
+
+Layers : [0, 1, 2]
+T list : [10, 5, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.765625, test avg acc: 0.666486
+
+
+Layers : [0, 1, 2]
+T list : [10, 5, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.695312, test avg acc: 0.617172
+
+
+Layers : [0, 1, 2]
+T list : [10, 10, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.765625, test avg acc: 0.698088
+
+
+Layers : [0, 1, 2]
+T list : [10, 10, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.796875, test avg acc: 0.728139
+
+
+Layers : [0, 1, 2]
+T list : [10, 10, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.796875, test avg acc: 0.722619
+
+
+Layers : [0, 1, 2]
+T list : [10, 10, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.710938, test avg acc: 0.661544
+
+
+Layers : [0, 1, 2]
+T list : [10, 10, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.734375, test avg acc: 0.673449
+
+
+Layers : [0, 1, 2]
+T list : [10, 10, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.695312, test avg acc: 0.608586
+
+
+Layers : [0, 1, 2]
+T list : [10, 15, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.781250, test avg acc: 0.705411
+
+
+Layers : [0, 1, 2]
+T list : [10, 15, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.789062, test avg acc: 0.715512
+
+
+Layers : [0, 1, 2]
+T list : [10, 15, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.773438, test avg acc: 0.706313
+
+
+Layers : [0, 1, 2]
+T list : [10, 15, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.726562, test avg acc: 0.665620
+
+
+Layers : [0, 1, 2]
+T list : [10, 15, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.718750, test avg acc: 0.639899
+
+
+Layers : [0, 1, 2]
+T list : [10, 15, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.718750, test avg acc: 0.614214
+
+
+Layers : [0, 1, 2]
+T list : [10, 20, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.796875, test avg acc: 0.723088
+
+
+Layers : [0, 1, 2]
+T list : [10, 20, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.765625, test avg acc: 0.701082
+
+
+Layers : [0, 1, 2]
+T list : [10, 20, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.765625, test avg acc: 0.703860
+
+
+Layers : [0, 1, 2]
+T list : [10, 20, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.718750, test avg acc: 0.650469
+
+
+Layers : [0, 1, 2]
+T list : [10, 20, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.687500, test avg acc: 0.602742
+
+
+Layers : [0, 1, 2]
+T list : [10, 20, 150]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.687500, test avg acc: 0.617136
+
+
+Layers : [0, 1, 2]
+T list : [10, 25, 0]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.781250, test avg acc: 0.713709
+
+
+Layers : [0, 1, 2]
+T list : [10, 25, 30]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.757812, test avg acc: 0.690440
+
+
+Layers : [0, 1, 2]
+T list : [10, 25, 60]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.789062, test avg acc: 0.723990
+
+
+Layers : [0, 1, 2]
+T list : [10, 25, 90]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.734375, test avg acc: 0.652453
+
+
+Layers : [0, 1, 2]
+T list : [10, 25, 120]
+Test attack :: test acc: 0.320312, test avg acc: 0.243290
+Test defense :: test acc: 0.687500, test avg acc: 0.623918
+
+

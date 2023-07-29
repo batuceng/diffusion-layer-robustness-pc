@@ -1,18 +1,21 @@
-import os
+"""
+Train point cloud denoising model on layer data
+"""
+
 import argparse
 import torch
 import torch.utils.tensorboard
+from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
 from tqdm.auto import tqdm
 
-from utils.dataset import *
-from utils.misc import *
-from utils.data import *
-from utils.transform import *
-from models.autoencoder import *
-from evaluation import EMD_CD
-from data.modelnet40 import ModelNet40
-from models.dgcnn import PointNet, DGCNN_cls, Identity
+from util.misc import THOUSAND, CheckpointManager, BlackHole,\
+                      seed_all, get_new_log_dir, get_logger, get_data_iterator
+from util.evaluation_metrics import EMD_CD
+from models.autoencoder import AutoEncoder
+from dataset.modelnet40 import ModelNet40
+from models.dgcnn import PointNet, DGCNN_cls
+from models.denoiser import Identity
 import time
 
 # Arguments
@@ -47,7 +50,7 @@ parser.add_argument('--sched-end-epoch', type=int, default=300*THOUSAND)
 # Training
 parser.add_argument('--seed', type=int, default=2020)
 parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
-parser.add_argument('--log-root', type=str, default='./logs/layer1')
+parser.add_argument('--log-root', type=str, default='./logs/layer2')
 parser.add_argument('--device', type=str, default='cuda', choices=['cuda', 'cpu'])
 parser.add_argument('--max-iters', type=int, default=float('inf'))
 parser.add_argument('--val-freq', type=float, default=1000)
@@ -72,6 +75,9 @@ parser.add_argument('--model-path', type=str, default='pretrained/model.1024.t7'
 
 args = parser.parse_args()
 seed_all(args.seed)
+
+
+seed_all, get_new_log_dir, get_logger, CheckpointManager, BlackHole, get_data_iterator
 
 # Logging
 if args.logging:
