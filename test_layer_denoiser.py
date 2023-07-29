@@ -2,26 +2,19 @@
 Test layer denoisers on point cloud attacked data.
 """
 
-import os
-import time
-import argparse
-import torch
-from tqdm.auto import tqdm
-
 from util.misc import seed_all, IOStream
 from models.autoencoder import AutoEncoder
 
-
 import os
 import argparse
+import numpy as np
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
+import sklearn.metrics as metrics
 from dataset.modelnet40 import ModelNet40
 from models.dgcnn import PointNet, DGCNN_cls
 from models.denoiser import Identity, Layer_Denoiser
-import numpy as np
-from torch.utils.data import DataLoader
-import sklearn.metrics as metrics
 from attack import FGM, IFGM, MIFGM, PGD, Identity_Attack, PGD_PointDP, Drop_PointDP
 from attack import CWKNN, CWAdd
 from attack import CWPerturb

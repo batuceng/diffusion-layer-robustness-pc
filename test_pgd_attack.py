@@ -4,26 +4,18 @@ Test denoising model on pre-saved PGD attacked data.
 
 
 import os
-import time
 import argparse
 import torch
-from tqdm.auto import tqdm
-
-from util.misc import IOStream, seed_all
-from models.autoencoder import AutoEncoder
-
-
-import os
-import argparse
-import torch
+import numpy as np
 import torch.nn as nn
+from torch.utils.data import DataLoader
+import sklearn.metrics as metrics
+from util.misc import IOStream, seed_all
 from dataset.modelnet40 import ModelNet40, ModelNet40Attack
+from models.autoencoder import AutoEncoder
 from models.dgcnn import PointNet, DGCNN_cls
 from models.denoiser import Identity, Layer_Denoiser, Multiple_Layer_Denoiser
-import numpy as np
-from torch.utils.data import DataLoader
 
-import sklearn.metrics as metrics
 from attack import FGM, IFGM, MIFGM, PGD, Identity_Attack, PGD_PointDP, Drop_PointDP
 from attack import CWKNN, CWAdd
 from attack import CWPerturb

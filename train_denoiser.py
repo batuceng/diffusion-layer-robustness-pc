@@ -4,16 +4,17 @@ Train point cloud denoising model on layer data
 
 import argparse
 import torch
+import torch.nn as nn
 import torch.utils.tensorboard
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
 from tqdm.auto import tqdm
-
 from util.misc import THOUSAND, CheckpointManager, BlackHole,\
                       seed_all, get_new_log_dir, get_logger, get_data_iterator
 from util.evaluation_metrics import EMD_CD
-from models.autoencoder import AutoEncoder
 from dataset.modelnet40 import ModelNet40
+from models.autoencoder import AutoEncoder
+from models.common import get_linear_scheduler
 from models.dgcnn import PointNet, DGCNN_cls
 from models.denoiser import Identity
 import time
