@@ -66,8 +66,8 @@ class PointNet2_cls(nn.Module):
     def forward_denoised(self, xyz, denoiser=None):
         B, _, _ = xyz.shape
         layer_data = []                         # Store each layer data
-        x = denoiser(data=x, layer=0)               # Denoise Layer 0
-        layer_data.append(x.clone().detach().requires_grad_(True))    # Store Layer 0
+        xyz = denoiser(data=xyz, layer=0)               # Denoise Layer 0
+        layer_data.append(xyz.clone().detach().requires_grad_(True))    # Store Layer 0
         if self.normal_channel:
             norm = xyz[:, 3:, :]
             xyz = xyz[:, :3, :]

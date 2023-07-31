@@ -13,7 +13,8 @@ import sklearn.metrics as metrics
 from util.misc import IOStream, seed_all
 from dataset.modelnet40 import ModelNet40Attack
 from models.autoencoder import AutoEncoder
-from models.dgcnn import PointNet, DGCNN_cls
+from models.dgcnn import DGCNN_cls
+from models.pointnet2 import PointNet2_cls
 from models.denoiser import Identity, Layer_Denoiser, Multiple_Layer_Denoiser
 
 import warnings
@@ -66,7 +67,7 @@ parser.add_argument('--binary-step', type=int, default=10, metavar='N', help='Bi
 parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
 parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                    choices=['pointnet', 'dgcnn'],
+                    choices=['pointnet2', 'dgcnn'],
                     help='Model to use, [pointnet, dgcnn]')
 parser.add_argument('--dataset', type=str, default='modelnet40', metavar='N',
                     choices=['modelnet40'])
@@ -87,16 +88,6 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--eval', type=bool,  default=True,
                     help='evaluate the model')
-parser.add_argument('--dropout', type=float, default=0.5,
-                    help='initial dropout rate')
-parser.add_argument('--emb-dims', type=int, default=1024, metavar='N',
-                    help='Dimension of embeddings')
-parser.add_argument('--k', type=int, default=20, metavar='N',
-                    help='Num of nearest neighbors to use')
-parser.add_argument('--model-path', type=str, default='pretrained/model.1024.t7', metavar='N',
-                    help='Pretrained model path')
-parser.add_argument('--num-drop', type=int, default=200, metavar='N',
-                        help='Number of dropping points')
 
 args = parser.parse_args()
 seed_all(args.seed)
@@ -118,15 +109,13 @@ def test(args, io):
     device = torch.device("cuda" if args.cuda else "cpu")
 
     #Try to load models
-    if args.model == 'pointnet':
-        model = PointNet().to(device)
+    if args.model == 'pointnet2':
+        model = PointNet2_cls().to(device)
     elif args.model == 'dgcnn':
         model = DGCNN_cls(args).to(device)
     else:
         raise Exception("Not implemented")
 
-    model = nn.DataParallel(model)
-    model.load_state_dict(torch.load(args.model_path))
     model = model.eval()
     
     # Autoencoders

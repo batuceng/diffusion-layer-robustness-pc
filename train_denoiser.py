@@ -15,7 +15,8 @@ from util.evaluation_metrics import EMD_CD
 from dataset.modelnet40 import ModelNet40
 from models.autoencoder import AutoEncoder
 from models.common import get_linear_scheduler
-from models.dgcnn import PointNet, DGCNN_cls
+from models.dgcnn import DGCNN_cls
+from models.pointnet2 import PointNet2_cls
 from models.denoiser import Identity
 import time
 
@@ -51,7 +52,7 @@ parser.add_argument('--sched-end-epoch', type=int, default=300*THOUSAND)
 # Training
 parser.add_argument('--seed', type=int, default=2020)
 parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
-parser.add_argument('--log-root', type=str, default='./logs/layer2')
+parser.add_argument('--log-root', type=str, default='./logs')
 parser.add_argument('--device', type=str, default='cuda', choices=['cuda', 'cpu'])
 parser.add_argument('--max-iters', type=int, default=float('inf'))
 parser.add_argument('--val-freq', type=float, default=1000)
@@ -61,18 +62,12 @@ parser.add_argument('--num-inspect-batches', type=int, default=1)
 parser.add_argument('--num-inspect-pointclouds', type=int, default=4)
 
 # Classifier Args
-parser.add_argument('--layer-no', type=int, default=0, choices=[0, 1, 2, 3, 4])
-parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                    choices=['pointnet', 'dgcnn'],
-                    help='Model to use, [pointnet, dgcnn]')
-parser.add_argument('--dropout', type=float, default=0.5,
-                    help='initial dropout rate')
-parser.add_argument('--emb-dims', type=int, default=1024, metavar='N',
-                    help='Dimension of embeddings')
-parser.add_argument('--k', type=int, default=20, metavar='N',
-                    help='Num of nearest neighbors to use')
-parser.add_argument('--model-path', type=str, default='pretrained/model.1024.t7', metavar='N',
-                    help='Pretrained model path')
+parser.add_argument('-layer-no', type=int, choices=[0, 1, 2, 3, 4])
+parser.add_argument('-model', type=str, metavar='N', choices=['pointnet2', 'dgcnn'],
+                    help='Model to use, [pointnet2, dgcnn]')
+# parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+#                     choices=['pointnet2', 'dgcnn'],
+#                     help='Model to use, [pointnet2, dgcnn]')
 
 args = parser.parse_args()
 seed_all(args.seed)
@@ -82,7 +77,7 @@ seed_all, get_new_log_dir, get_logger, CheckpointManager, BlackHole, get_data_it
 
 # Logging
 if args.logging:
-    log_dir = get_new_log_dir(args.log_root, prefix='AE_', postfix='_' + args.tag if args.tag is not None else '')
+    log_dir = get_new_log_dir(args.log_root, prefix=f'AE_{args.model}_layer{args.layer_no}_', postfix='_' + args.tag if args.tag is not None else '')
     logger = get_logger('train', log_dir)
     writer = torch.utils.tensorboard.SummaryWriter(log_dir)
     ckpt_mgr = CheckpointManager(log_dir)
@@ -111,17 +106,18 @@ else:
 device = torch.device("cuda" if (torch.cuda.is_available() and args.device=="cuda") else "cpu")
 
 # Classification Model
-if args.model == 'pointnet':
-    cls_model = PointNet().to(device)
+if args.model == 'pointnet2':
+    cls_model = PointNet2_cls().to(device)
+    input_dim_dict = {0:3, 1:128, 2:256, 3:256, 4:None}
+    assert 0<=args.layer_no<4
 elif args.model == 'dgcnn':
     cls_model = DGCNN_cls(args).to(device)
     input_dim_dict = {0:3, 1:64, 2:64, 3:128, 4:256}
+    assert 0<=args.layer_no<5
 else:
     raise Exception("Not implemented")
 args.input_dim = input_dim_dict[args.layer_no]
 
-cls_model = nn.DataParallel(cls_model)
-cls_model.load_state_dict(torch.load(args.model_path))
 cls_model = cls_model.eval()
 
 # Denoiser
@@ -166,7 +162,7 @@ def get_layer_data(batch, layer_no):
     cls_model.eval()
     with torch.no_grad():
         # CLS forward
-        _, data = cls_model.module.forward_denoised(data.permute(0,2,1), denoiser)
+        _, data = cls_model.forward_denoised(data.permute(0,2,1), denoiser)
         data = data[layer_no]
         data = data.permute(0,2,1).to(device)
         # Normalize
