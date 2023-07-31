@@ -66,9 +66,8 @@ parser.add_argument('--binary-step', type=int, default=10, metavar='N', help='Bi
 # DGCNN arguments
 parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
-parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                    choices=['pointnet2', 'dgcnn'],
-                    help='Model to use, [pointnet, dgcnn]')
+parser.add_argument('-model', type=str, metavar='N', choices=['pointnet2', 'dgcnn'],
+                    help='Model to use, [pointnet2, dgcnn]')
 parser.add_argument('--dataset', type=str, default='modelnet40', metavar='N',
                     choices=['modelnet40'])
 parser.add_argument('--epochs', type=int, default=250, metavar='N',
@@ -88,6 +87,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--eval', type=bool,  default=True,
                     help='evaluate the model')
+parser.add_argument('--data-path', type=str ,default="test_attack_outputs/pgd_linf_0.05")
 
 args = parser.parse_args()
 seed_all(args.seed)
@@ -103,7 +103,7 @@ def test(args, io):
 
     # test_loader = DataLoader(test_dset, batch_size=args.batch_size, num_workers=0, shuffle=True)
 
-    test_loader = DataLoader(ModelNet40Attack(args.num_points),
+    test_loader = DataLoader(ModelNet40Attack(args.num_points, path = args.data_path),
                             batch_size=args.batch_size, shuffle=False, drop_last=False)
 
     device = torch.device("cuda" if args.cuda else "cpu")
@@ -112,7 +112,7 @@ def test(args, io):
     if args.model == 'pointnet2':
         model = PointNet2_cls().to(device)
     elif args.model == 'dgcnn':
-        model = DGCNN_cls(args).to(device)
+        model = DGCNN_cls().to(device)
     else:
         raise Exception("Not implemented")
 
@@ -179,14 +179,14 @@ def test(args, io):
         with torch.no_grad():
             # Prediction with layer denoising on pre-attacked data
             input_data = data * scale.to(args.device) + shift.to(args.device)
-            logits, _ = model.module.forward_denoised(input_data.clone().detach().permute(0, 2, 1), denoiser=denoiser)
+            logits, _ = model.forward_denoised(input_data.clone().detach().permute(0, 2, 1), denoiser=denoiser)
             pre_attack_defense_preds = logits.max(dim=1)[1]
             test_pre_attack_defense.append(pre_attack_defense_preds.detach().cpu().numpy())
         
         with torch.no_grad():
             # Prediction with layer denoising on attacked data
             input_data = data_attack * scale.to(args.device) + shift.to(args.device)
-            logits, _ = model.module.forward_denoised(input_data.clone().detach().permute(0, 2, 1), denoiser=denoiser)
+            logits, _ = model.forward_denoised(input_data.clone().detach().permute(0, 2, 1), denoiser=denoiser)
             defended_preds = logits.max(dim=1)[1]
             test_true.append(label.cpu().numpy())
             test_defended_pred.append(defended_preds.detach().cpu().numpy())
