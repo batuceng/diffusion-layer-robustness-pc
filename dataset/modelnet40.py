@@ -23,6 +23,13 @@ from copy import copy
 from torch.utils.data import Dataset
 import random
 
+LABELS = ["airplane", "bathtub", "bed", "bench", "bookshelf", "bottle", "bowl", 
+          "car", "chair", "cone", "cup", "curtain", "desk", "door", "dresser", 
+          "flower_pot", "glass_box", "guitar", "keyboard", "lamp", "laptop", 
+          "mantel", "monitor", "night_stand", "person", "piano", "plant", "radio",
+          "range_hood", "sink", "sofa", "stairs", "stool", "table", "tent", "toilet",
+          "tv_stand", "vase", "wardrobe", "xbox"
+          ]
 
 def download_modelnet40():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -86,6 +93,7 @@ class ModelNet40(Dataset):
         self.scale_mode = scale_mode
         self.pointclouds = []
         self.normalize()
+        self.label_dict = {i:v for i,v in enumerate(LABELS)}
         
         
     def get_statistics(self):
@@ -94,9 +102,7 @@ class ModelNet40(Dataset):
         B, N, _ = data.size()
         mean = data.view(B*N, -1).mean(dim=0) # (1, 3)
         std = data.view(-1).std(dim=0)        # (1, )
-
         self.stats = {'mean': mean, 'std': std}
-        
         return self.stats
     
     def normalize(self):
@@ -142,13 +148,12 @@ class ModelNet40(Dataset):
     def __getitem__(self, item):
         data = {k:v.clone() if isinstance(v, torch.Tensor) else copy(v) for k, v in self.pointclouds[item].items()}
         data["pointcloud"] = data["pointcloud"][:self.num_points]  # select first 1024 points
-        
+        # Random permute/rotation/translation in training mode
         if self.partition == 'train':
             pointcloud = data["pointcloud"]
             pointcloud = translate_pointcloud(pointcloud)
             pointcloud = pointcloud[torch.randperm(pointcloud.size()[0])]
             data["pointcloud"] = pointcloud
-         
         return data
 
     def __len__(self):
@@ -156,7 +161,7 @@ class ModelNet40(Dataset):
     
 
 class ModelNet40Attack(Dataset):
-    def __init__(self, num_points, path = "test_attack_outputs/pgd_linf_0.05"):
+    def __init__(self, num_points, path):
         self.path = path
         self.transform = False
         self.data, self.data_attack, self.label, self.shift, self.scale = self.load_data(self.path)
@@ -206,45 +211,3 @@ class ModelNet40Attack(Dataset):
     def __len__(self):
         return len(self.pointclouds)
     
-
-LABELS = ["airplane",
-"bathtub",
-"bed",
-"bench",
-"bookshelf",
-"bottle",
-"bowl",
-"car",
-"chair",
-"cone",
-"cup",
-"curtain",
-"desk",
-"door",
-"dresser",
-"flower_pot",
-"glass_box",
-"guitar",
-"keyboard",
-"lamp",
-"laptop",
-"mantel",
-"monitor",
-"night_stand",
-"person",
-"piano",
-"plant",
-"radio",
-"range_hood",
-"sink",
-"sofa",
-"stairs",
-"stool",
-"table",
-"tent",
-"toilet",
-"tv_stand",
-"vase",
-"wardrobe",
-"xbox"
-]

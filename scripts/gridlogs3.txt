@@ -310,3 +310,675 @@ Test attack :: test acc: 0.091977, test avg acc: 0.057750
 Test defense :: test acc: 0.727310, test avg acc: 0.608616
 
 
+Layers : [0, 1, 2]
+T list : [195, 0, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.829417, test avg acc: 0.736785
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.726904, test avg acc: 0.599064
+
+
+Layers : [0, 1, 2]
+T list : [200, 0, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.831037, test avg acc: 0.753448
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.724878, test avg acc: 0.600663
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.928687, test avg acc: 0.898744
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.091977, test avg acc: 0.057750
+
+
+Layers : [0, 1, 2]
+T list : [0, 5, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.923825, test avg acc: 0.889866
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.102512, test avg acc: 0.070250
+
+
+Layers : [0, 1, 2]
+T list : [0, 10, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.922609, test avg acc: 0.888576
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.121556, test avg acc: 0.085041
+
+
+Layers : [0, 1, 2]
+T list : [0, 15, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.917342, test avg acc: 0.881500
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.148703, test avg acc: 0.109372
+
+
+Layers : [0, 1, 2]
+T list : [0, 20, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.912885, test avg acc: 0.873372
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.188412, test avg acc: 0.141663
+
+
+Layers : [0, 1, 2]
+T list : [0, 25, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.911264, test avg acc: 0.863494
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.217990, test avg acc: 0.161826
+
+
+Layers : [0, 1, 2]
+T list : [0, 30, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.898703, test avg acc: 0.848634
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.275527, test avg acc: 0.218227
+
+
+Layers : [0, 1, 2]
+T list : [0, 35, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.892626, test avg acc: 0.831262
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.297002, test avg acc: 0.227936
+
+
+Layers : [0, 1, 2]
+T list : [0, 40, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.880875, test avg acc: 0.819965
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.326985, test avg acc: 0.256721
+
+
+Layers : [0, 1, 2]
+T list : [0, 45, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.861426, test avg acc: 0.793977
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.356159, test avg acc: 0.279797
+
+
+Layers : [0, 1, 2]
+T list : [0, 50, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.852917, test avg acc: 0.788471
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.372366, test avg acc: 0.300000
+
+
+Layers : [0, 1, 2]
+T list : [0, 55, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.836710, test avg acc: 0.771279
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.384522, test avg acc: 0.299041
+
+
+Layers : [0, 1, 2]
+T list : [0, 60, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.809968, test avg acc: 0.736831
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.394652, test avg acc: 0.306378
+
+
+Layers : [0, 1, 2]
+T list : [0, 65, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.809157, test avg acc: 0.733413
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.390194, test avg acc: 0.306134
+
+
+Layers : [0, 1, 2]
+T list : [0, 70, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.780389, test avg acc: 0.701093
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.395057, test avg acc: 0.306831
+
+
+Layers : [0, 1, 2]
+T list : [0, 75, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.772690, test avg acc: 0.703052
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.399109, test avg acc: 0.307791
+
+
+Layers : [0, 1, 2]
+T list : [0, 80, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.760130, test avg acc: 0.674814
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.397893, test avg acc: 0.311343
+
+
+Layers : [0, 1, 2]
+T list : [0, 85, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.746759, test avg acc: 0.664029
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.394246, test avg acc: 0.304994
+
+
+Layers : [0, 1, 2]
+T list : [0, 90, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.743517, test avg acc: 0.667779
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.408023, test avg acc: 0.317500
+
+
+Layers : [0, 1, 2]
+T list : [0, 95, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.736629, test avg acc: 0.661581
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.390600, test avg acc: 0.305302
+
+
+Layers : [0, 1, 2]
+T list : [0, 100, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.727310, test avg acc: 0.643756
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.404376, test avg acc: 0.308291
+
+
+Layers : [0, 1, 2]
+T list : [0, 105, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.713128, test avg acc: 0.631634
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.397893, test avg acc: 0.308756
+
+
+Layers : [0, 1, 2]
+T list : [0, 110, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.707455, test avg acc: 0.642483
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.393031, test avg acc: 0.295041
+
+
+Layers : [0, 1, 2]
+T list : [0, 115, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.709481, test avg acc: 0.626262
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.397083, test avg acc: 0.304674
+
+
+Layers : [0, 1, 2]
+T list : [0, 120, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.714749, test avg acc: 0.635047
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.389789, test avg acc: 0.297209
+
+
+Layers : [0, 1, 2]
+T list : [0, 125, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.712723, test avg acc: 0.631343
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.392220, test avg acc: 0.308378
+
+
+Layers : [0, 1, 2]
+T list : [0, 130, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.704214, test avg acc: 0.617977
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.401135, test avg acc: 0.307331
+
+
+Layers : [0, 1, 2]
+T list : [0, 135, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.707050, test avg acc: 0.629924
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.391005, test avg acc: 0.297680
+
+
+Layers : [0, 1, 2]
+T list : [0, 140, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.704619, test avg acc: 0.619808
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.397488, test avg acc: 0.306715
+
+
+Layers : [0, 1, 2]
+T list : [0, 145, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.710292, test avg acc: 0.628436
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.395057, test avg acc: 0.303006
+
+
+Layers : [0, 1, 2]
+T list : [0, 150, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.709887, test avg acc: 0.630477
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.391005, test avg acc: 0.299419
+
+
+Layers : [0, 1, 2]
+T list : [0, 155, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.703404, test avg acc: 0.622808
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.395057, test avg acc: 0.302959
+
+
+Layers : [0, 1, 2]
+T list : [0, 160, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.696515, test avg acc: 0.617820
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.402350, test avg acc: 0.311919
+
+
+Layers : [0, 1, 2]
+T list : [0, 165, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.697326, test avg acc: 0.625686
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.393436, test avg acc: 0.306628
+
+
+Layers : [0, 1, 2]
+T list : [0, 170, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.700567, test avg acc: 0.617058
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.385737, test avg acc: 0.292297
+
+
+Layers : [0, 1, 2]
+T list : [0, 175, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.711507, test avg acc: 0.621814
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.390600, test avg acc: 0.298419
+
+
+Layers : [0, 1, 2]
+T list : [0, 180, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.706645, test avg acc: 0.625221
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.394246, test avg acc: 0.308884
+
+
+Layers : [0, 1, 2]
+T list : [0, 185, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.695705, test avg acc: 0.614151
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.382496, test avg acc: 0.293674
+
+
+Layers : [0, 1, 2]
+T list : [0, 190, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.698136, test avg acc: 0.610808
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.386143, test avg acc: 0.292465
+
+
+Layers : [0, 1, 2]
+T list : [0, 195, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.701378, test avg acc: 0.625610
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.391410, test avg acc: 0.298552
+
+
+Layers : [0, 1, 2]
+T list : [0, 200, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.696110, test avg acc: 0.616442
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.392220, test avg acc: 0.292500
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 0]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.928687, test avg acc: 0.898744
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.091977, test avg acc: 0.057750
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 5]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.926661, test avg acc: 0.897616
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.096029, test avg acc: 0.064250
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 10]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.921394, test avg acc: 0.887953
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.100486, test avg acc: 0.067000
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 15]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.926256, test avg acc: 0.894494
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.118314, test avg acc: 0.079331
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 20]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.925851, test avg acc: 0.893122
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.125608, test avg acc: 0.087500
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 25]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.927066, test avg acc: 0.894994
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.142626, test avg acc: 0.100163
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 30]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.920583, test avg acc: 0.885581
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.158023, test avg acc: 0.115994
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 35]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.917747, test avg acc: 0.880041
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.176661, test avg acc: 0.132035
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 40]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.916126, test avg acc: 0.874622
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.202188, test avg acc: 0.148453
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 45]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.914506, test avg acc: 0.872541
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.230956, test avg acc: 0.170826
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 50]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.909643, test avg acc: 0.865965
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.259319, test avg acc: 0.198907
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 55]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.913290, test avg acc: 0.867378
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.282820, test avg acc: 0.215029
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 60]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.908023, test avg acc: 0.863174
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.308347, test avg acc: 0.232651
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 65]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.910454, test avg acc: 0.871297
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.339951, test avg acc: 0.268058
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 70]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.900729, test avg acc: 0.853593
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.363452, test avg acc: 0.274686
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 75]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.901540, test avg acc: 0.856256
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.386953, test avg acc: 0.306477
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 80]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.901945, test avg acc: 0.852924
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.410454, test avg acc: 0.318721
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 85]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.888574, test avg acc: 0.834506
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.425851, test avg acc: 0.332599
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 90]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.884927, test avg acc: 0.838640
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.440438, test avg acc: 0.346680
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 95]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.879254, test avg acc: 0.825645
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.461507, test avg acc: 0.364000
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 100]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.882901, test avg acc: 0.837517
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.470827, test avg acc: 0.371547
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 105]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.860616, test avg acc: 0.799907
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.466370, test avg acc: 0.364680
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 110]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.860616, test avg acc: 0.812151
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.484198, test avg acc: 0.389506
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 115]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.850891, test avg acc: 0.795779
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.491896, test avg acc: 0.393134
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 120]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.851297, test avg acc: 0.791901
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.488655, test avg acc: 0.391174
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 125]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.844003, test avg acc: 0.786331
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.486629, test avg acc: 0.376715
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 130]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.827796, test avg acc: 0.772128
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.493112, test avg acc: 0.381721
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 135]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.829822, test avg acc: 0.778715
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.480956, test avg acc: 0.373349
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 140]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.819287, test avg acc: 0.769727
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.499190, test avg acc: 0.396924
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 145]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.811994, test avg acc: 0.760977
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.480956, test avg acc: 0.367308
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 150]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.798217, test avg acc: 0.744570
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.480146, test avg acc: 0.365767
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 155]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.800648, test avg acc: 0.752203
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.484198, test avg acc: 0.383273
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 160]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.792545, test avg acc: 0.741360
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.477715, test avg acc: 0.371971
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 165]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.792545, test avg acc: 0.739564
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.477310, test avg acc: 0.363233
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 170]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.792545, test avg acc: 0.735360
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.472042, test avg acc: 0.363320
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 175]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.784846, test avg acc: 0.742919
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.480956, test avg acc: 0.374395
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 180]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.800648, test avg acc: 0.747163
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.465964, test avg acc: 0.355017
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 185]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.780389, test avg acc: 0.730209
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.467180, test avg acc: 0.368692
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 190]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.788493, test avg acc: 0.738628
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.459481, test avg acc: 0.356692
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 195]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.783225, test avg acc: 0.729256
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.457455, test avg acc: 0.356448
+
+
+Layers : [0, 1, 2]
+T list : [0, 0, 200]
+Test pre attack :: test acc: 0.928687, test avg acc: 0.898744
+Test pre attack defense :: test acc: 0.779173, test avg acc: 0.723628
+Test attack :: test acc: 0.091977, test avg acc: 0.057750
+Test defense :: test acc: 0.456645, test avg acc: 0.354733
+
+
