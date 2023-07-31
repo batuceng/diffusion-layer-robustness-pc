@@ -10,12 +10,12 @@ import argparse
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import sklearn.metrics as metrics
+from torch.utils.data import DataLoader
 from dataset.modelnet40 import ModelNet40
 from models.dgcnn import PointNet, DGCNN_cls
 from models.denoiser import Identity, Layer_Denoiser
-from attack import FGM, IFGM, MIFGM, PGD, Identity_Attack, PGD_PointDP, Drop_PointDP
+from attack import Identity_Attack, PGD, Drop_PointDP
 from attack import CWKNN, CWAdd
 from attack import CWPerturb
 from attack import SaliencyDrop
@@ -39,7 +39,7 @@ parser.add_argument('--scale-mode', type=str, default='shape_unit')
 
 # Attack arguments
 parser.add_argument('--attack-type', type=str, default="none")
-parser.add_argument('--budget', type=float, default=1.25,
+parser.add_argument('--budget', type=float, default=0.05,
                         help='FGM attack budget')
 parser.add_argument('--num-iter', type=int, default=200, # 50 for pgd, 500 for cw    
                     help='IFGM iterate step')
@@ -139,18 +139,10 @@ def test(args, io):
         adv_func = CrossEntropyAdvLoss()
     clip_func = ClipPointsL2(budget=args.budget)
     dist_func = L2Dist()
-    
-    if args.attack_type == "pgd":
-        args.budget = args.budget * np.sqrt(args.num_points * 3)  # \delta * \sqrt(N * d)
-        args.num_iter = int(args.num_iter)
-        args.step_size = args.budget / float(args.num_iter)
-        attacker = PGD(model, adv_func=adv_func,
-                        clip_func=clip_func, budget=args.budget, step_size=args.step_size,
-                        num_iter=args.num_iter, dist_metric='l2')
         
-    elif args.attack_type == "pgd_pointdp":
-        dist = 2  # np.inf
-        attacker = PGD_PointDP(model, args.num_iter, eps=args.budget, alpha=args.attack_lr, p=dist)
+    if args.attack_type == "pgd":
+        dist = np.inf  # np.inf
+        attacker = PGD(model, args.num_iter, eps=args.budget, alpha=args.attack_lr, p=dist)
     
     elif args.attack_type == "drop":
         attacker = SaliencyDrop(model, num_drop=args.num_drop,
@@ -255,18 +247,21 @@ def test(args, io):
         all_shift.append(shift.numpy())
         all_scale.append(scale.numpy())
 
+        path = "test_attack_outputs/pgd_linf_0.05"
         
         # Save batch
         mode = False
         if mode:
-            np.save(os.path.join("test_attack_outputs", f'ref_{i}.npy'), np.concatenate(all_ref))
-            np.save(os.path.join("test_attack_outputs", f'attack_{i}.npy'), np.concatenate(all_attack))
-            np.savetxt(os.path.join("test_attack_outputs", f'true_label_{i}.txt'), np.concatenate(test_true))
-            np.savetxt(os.path.join("test_attack_outputs", f'target_label_{i}.txt'), np.concatenate(test_target))
-            np.savetxt(os.path.join("test_attack_outputs", f'test_pred_{i}.txt'), np.concatenate(test_pred))
-            np.savetxt(os.path.join("test_attack_outputs", f'test_pre_attack_pred_{i}.txt'), np.concatenate(test_pre_attack_pred))
-            np.savetxt(os.path.join("test_attack_outputs", f'test_post_attack_pred_{i}.txt'), np.concatenate(test_post_attack_pred)) 
-
+            np.save(os.path.join(path, f'ref_{i}.npy'), np.concatenate(all_ref))
+            np.save(os.path.join(path, f'attack_{i}.npy'), np.concatenate(all_attack))
+            np.savetxt(os.path.join(path, f'true_label_{i}.txt'), np.concatenate(test_true))
+            np.savetxt(os.path.join(path, f'target_label_{i}.txt'), np.concatenate(test_target))
+            np.savetxt(os.path.join(path, f'test_pred_{i}.txt'), np.concatenate(test_pred))
+            np.savetxt(os.path.join(path, f'test_pre_attack_pred_{i}.txt'), np.concatenate(test_pre_attack_pred))
+            np.savetxt(os.path.join(path, f'test_post_attack_pred_{i}.txt'), np.concatenate(test_post_attack_pred)) 
+            
+    path = "test_attack_outputs/pgd_linf_0.05"
+    
     test_true = np.concatenate(test_true)
     test_target = np.concatenate(test_target)
     test_pred = np.concatenate(test_pred)
@@ -277,15 +272,15 @@ def test(args, io):
     all_shift = np.concatenate(all_shift)
     all_scale = np.concatenate(all_scale)
     
-    np.save(os.path.join("test_attack_outputs", 'ref.npy'), all_ref)
-    np.save(os.path.join("test_attack_outputs", 'attack.npy'), all_attack)
-    np.save(os.path.join("test_attack_outputs", 'shift.npy'), all_shift)
-    np.save(os.path.join("test_attack_outputs", 'scale.npy'), all_scale)
-    np.savetxt(os.path.join("test_attack_outputs", 'true_label.txt'), test_true)
-    np.savetxt(os.path.join("test_attack_outputs", 'target_label.txt'), test_target)
-    np.savetxt(os.path.join("test_attack_outputs", 'test_pred.txt'), test_pred)
-    np.savetxt(os.path.join("test_attack_outputs", 'test_pre_attack_pred.txt'), test_pre_attack_pred)
-    np.savetxt(os.path.join("test_attack_outputs", 'test_post_attack_pred.txt'), test_post_attack_pred)    
+    np.save(os.path.join(path, 'ref.npy'), all_ref)
+    np.save(os.path.join(path, 'attack.npy'), all_attack)
+    np.save(os.path.join(path, 'shift.npy'), all_shift)
+    np.save(os.path.join(path, 'scale.npy'), all_scale)
+    np.savetxt(os.path.join(path, 'true_label.txt'), test_true)
+    np.savetxt(os.path.join(path, 'target_label.txt'), test_target)
+    np.savetxt(os.path.join(path, 'test_pred.txt'), test_pred)
+    np.savetxt(os.path.join(path, 'test_pre_attack_pred.txt'), test_pre_attack_pred)
+    np.savetxt(os.path.join(path, 'test_post_attack_pred.txt'), test_post_attack_pred)    
     
     test_acc = metrics.accuracy_score(test_true, test_pre_attack_pred)
     avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pre_attack_pred)

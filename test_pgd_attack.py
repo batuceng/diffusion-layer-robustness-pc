@@ -11,17 +11,10 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import sklearn.metrics as metrics
 from util.misc import IOStream, seed_all
-from dataset.modelnet40 import ModelNet40, ModelNet40Attack
+from dataset.modelnet40 import ModelNet40Attack
 from models.autoencoder import AutoEncoder
 from models.dgcnn import PointNet, DGCNN_cls
 from models.denoiser import Identity, Layer_Denoiser, Multiple_Layer_Denoiser
-
-from attack import FGM, IFGM, MIFGM, PGD, Identity_Attack, PGD_PointDP, Drop_PointDP
-from attack import CWKNN, CWAdd
-from attack import CWPerturb
-from attack import SaliencyDrop
-from attack import CrossEntropyAdvLoss, LogitsAdvLoss
-from attack import ClipPointsL2, L2Dist, ChamferkNNDist, ProjectInnerClipLinf
 
 import warnings
 
@@ -151,6 +144,8 @@ def test(args, io):
     test_true = []
     test_attack_pred = []
     test_defended_pred = []
+    test_pre_attack_pred = []
+    test_pre_attack_defense = []
         
     # Number of point clouds to test the attack
     stop_iter = args.test_size // args.batch_size
@@ -173,32 +168,49 @@ def test(args, io):
         # data, label, target_label = data.to(device), label.to(device).squeeze(), target_label.to(device).squeeze()
         
         data = batch['pointcloud'].to(args.device)
+        data_attack = batch['attack'].to(args.device)
         shift = batch['shift']
         scale = batch['scale']
         label = batch["cate"].to(args.device).view(-1)
         
         with torch.no_grad():
-            # Prediction on attacked data
+            # Prediction on original data
             input_data = data * scale.to(args.device) + shift.to(args.device)
             logits = model(input_data.clone().detach().permute(0, 2, 1))
             pre_attack_preds = logits.max(dim=1)[1]
-            test_attack_pred.append(pre_attack_preds.detach().cpu().numpy())
+            test_pre_attack_pred.append(pre_attack_preds.detach().cpu().numpy())
         
         with torch.no_grad():
-            # Prediction on with layer denoising on attacked data
+            # Prediction on attacked data
+            input_data = data_attack * scale.to(args.device) + shift.to(args.device)
+            logits = model(input_data.clone().detach().permute(0, 2, 1))
+            attack_preds = logits.max(dim=1)[1]
+            test_attack_pred.append(attack_preds.detach().cpu().numpy())
+            
+        with torch.no_grad():
+            # Prediction with layer denoising on pre-attacked data
             input_data = data * scale.to(args.device) + shift.to(args.device)
+            logits, _ = model.module.forward_denoised(input_data.clone().detach().permute(0, 2, 1), denoiser=denoiser)
+            pre_attack_defense_preds = logits.max(dim=1)[1]
+            test_pre_attack_defense.append(pre_attack_defense_preds.detach().cpu().numpy())
+        
+        with torch.no_grad():
+            # Prediction with layer denoising on attacked data
+            input_data = data_attack * scale.to(args.device) + shift.to(args.device)
             logits, _ = model.module.forward_denoised(input_data.clone().detach().permute(0, 2, 1), denoiser=denoiser)
             defended_preds = logits.max(dim=1)[1]
             test_true.append(label.cpu().numpy())
             test_defended_pred.append(defended_preds.detach().cpu().numpy())
         
         # Save data
-        all_attack.append(data.cpu().numpy() * scale.numpy() + shift.numpy())
+        all_attack.append(data_attack.cpu().numpy() * scale.numpy() + shift.numpy())
 
 
     test_true = np.concatenate(test_true)
+    test_pre_attack_pred = np.concatenate(test_pre_attack_pred)
     test_attack_pred = np.concatenate(test_attack_pred)
     test_defended_pred = np.concatenate(test_defended_pred)
+    test_pre_attack_defense = np.concatenate(test_pre_attack_defense)
     all_attack = np.concatenate(all_attack)
     
     save_mode = False
@@ -209,11 +221,21 @@ def test(args, io):
             pass
         np.save(os.path.join("pgd_test_outputs", 'attack.npy'), all_attack)
         np.savetxt(os.path.join("pgd_test_outputs", 'true_label.txt'), test_true)
-        np.savetxt(os.path.join("pgd_test_outputs", 'test_pre_attack_pred.txt'), test_attack_pred)
-        np.savetxt(os.path.join("pgd_test_outputs", 'test_post_attack_pred.txt'), test_defended_pred)    
+        np.savetxt(os.path.join("pgd_test_outputs", 'test_attack_pred.txt'), test_attack_pred)
+        np.savetxt(os.path.join("pgd_test_outputs", 'test_defended_pred.txt'), test_defended_pred)    
     
     io.cprint("Layers : " + str(args.layers))
     io.cprint("T list : " + str(args.t_list))
+    
+    test_acc = metrics.accuracy_score(test_true, test_pre_attack_pred)
+    avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pre_attack_pred)
+    outstr = 'Test pre attack :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
+    io.cprint(outstr)
+    
+    test_acc = metrics.accuracy_score(test_true, test_pre_attack_defense)
+    avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pre_attack_defense)
+    outstr = 'Test pre attack defense :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
+    io.cprint(outstr)
     
     test_acc = metrics.accuracy_score(test_true, test_attack_pred)
     avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_attack_pred)

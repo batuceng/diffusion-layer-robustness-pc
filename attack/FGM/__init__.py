@@ -1,1 +1,1 @@
-from .FGM import FGM, IFGM, MIFGM, PGD, Identity_Attack, PGD_PointDP
+from .FGM import PGD, Identity_Attack

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from typing import List
-from autoencoder import AutoEncoder
+from .autoencoder import AutoEncoder
 
 class Identity(nn.Module):
     def __init__(self, *args, **kwargs):

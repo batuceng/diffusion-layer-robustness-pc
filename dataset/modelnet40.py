@@ -82,7 +82,7 @@ class ModelNet40(Dataset):
         self.num_points = num_points
         self.partition = partition
         self.stats = self.get_statistics()
-        assert scale_mode is None or scale_mode in ("none", 'global_unit', 'shape_unit', 'shape_bbox', 'shape_half', 'shape_34')
+        assert scale_mode is None or scale_mode in ("none", 'global_unit', 'shape_unit', 'shape_bbox', 'shape_half', 'shape_34', "unit_sphere")
         self.scale_mode = scale_mode
         self.pointclouds = []
         self.normalize()
@@ -118,6 +118,9 @@ class ModelNet40(Dataset):
                 pc_min, _ = pc.min(dim=0, keepdim=True) # (1, 3)
                 shift = ((pc_min + pc_max) / 2).view(1, 3)
                 scale = (pc_max - pc_min).max().reshape(1, 1) / 2
+            elif self.scale_mode == "unit_sphere":
+                shift = pc.mean(dim=0).reshape(1, 3)
+                scale = torch.sqrt(torch.sum((pc - shift) ** 2, dim=1)).max()
             else:
                 shift = torch.zeros([1, 3])
                 scale = torch.ones([1, 1])
@@ -145,7 +148,7 @@ class ModelNet40(Dataset):
             pointcloud = translate_pointcloud(pointcloud)
             pointcloud = pointcloud[torch.randperm(pointcloud.size()[0])]
             data["pointcloud"] = pointcloud
-        
+         
         return data
 
     def __len__(self):
@@ -153,28 +156,31 @@ class ModelNet40(Dataset):
     
 
 class ModelNet40Attack(Dataset):
-    def __init__(self, num_points):
-        self.path = "test_attack_outputs"
+    def __init__(self, num_points, path = "test_attack_outputs/pgd_linf_0.05"):
+        self.path = path
         self.transform = False
-        self.data, self.label, self.shift, self.scale = self.load_data(self.path)
+        self.data, self.data_attack, self.label, self.shift, self.scale = self.load_data(self.path)
         self.num_points = num_points
         self.pointclouds = []
         self.normalize()
     
     def load_data(self, path):
-        data = np.load(os.path.join(path, "attack.npy"))
+        data = np.load(os.path.join(path, "ref.npy"))
+        data_attack = np.load(os.path.join(path, "attack.npy"))
         label = np.loadtxt(os.path.join(path, "true_label.txt"))
         shift = np.load(os.path.join(path, "shift.npy"))
         scale = np.load(os.path.join(path, "scale.npy"))
-        return data, label, shift, scale
+        return data, data_attack, label, shift, scale
     
     def normalize(self):
-        for idx, (pc, label, shift, scale) in enumerate(zip(self.data, self.label, self.shift, self.scale)):
+        for idx, (pc, pc_attack, label, shift, scale) in enumerate(zip(self.data, self.data_attack, self.label, self.shift, self.scale)):
             
             pc = (pc - shift) / scale
+            pc_attack = (pc_attack - shift) / scale
 
             self.pointclouds.append({
                     'pointcloud': pc,
+                    'attack': pc_attack,
                     'cate': label,
                     'id': idx,
                     'shift': shift,
@@ -189,11 +195,11 @@ class ModelNet40Attack(Dataset):
         data = {k:v.clone() if isinstance(v, torch.Tensor) else copy(v) for k, v in self.pointclouds[item].items()}
         # data["pointcloud"] = data["pointcloud"][:self.num_points]  # select first 1024 points
         
-        pointcloud = data["pointcloud"]
         if self.transform:
+            pointcloud = data["pointcloud"]
             pointcloud = translate_pointcloud(pointcloud)
             pointcloud = pointcloud[torch.randperm(pointcloud.size()[0])]
-        data["pointcloud"] = pointcloud
+            data["pointcloud"] = pointcloud
         
         return data
 

@@ -2,285 +2,11 @@
 Related paper: CVPR'20 GvG-P,
     https://openaccess.thecvf.com/content_CVPR_2020/papers/Dong_Self-Robust_3D_Point_Recognition_via_Gather-Vector_Guidance_CVPR_2020_paper.pdf
 """
+#%%
 
 import torch
 import numpy as np
 import torch.nn.functional as F
-
-class FGM:
-    """Class for FGM attack.
-    """
-
-    def __init__(self, model, adv_func, budget,
-                 dist_metric='l2'):
-        """FGM attack.
-
-        Args:
-            model (torch.nn.Module): victim model
-            adv_func (function): adversarial loss function
-            budget (float): \epsilon ball for FGM attack
-            dist_metric (str, optional): type of constraint. Defaults to 'l2'.
-        """
-
-        self.model = model.cuda()
-        self.model.eval()
-
-        self.adv_func = adv_func
-        self.budget = budget
-        self.dist_metric = dist_metric.lower()
-
-    def get_norm(self, x):
-        """Calculate the norm of a given data x.
-
-        Args:
-            x (torch.FloatTensor): [B, 3, K]
-        """
-        # use global l2 norm here!
-        norm = torch.sum(x ** 2, dim=[1, 2]) ** 0.5
-        return norm
-
-    def get_gradient(self, data, target, normalize=True):
-        """Generate one step gradient.
-
-        Args:
-            data (torch.FloatTensor): batch pc, [B, 3, K]
-            target (torch.LongTensor): target label, [B]
-            normalize (bool, optional): whether l2 normalize grad. Defaults to True.
-        """
-        data = data.float().cuda()
-        data.requires_grad_()
-        target = target.long().cuda()
-
-        # forward pass
-        logits = self.model(data)
-        if isinstance(logits, tuple):
-            logits = logits[0]  # [B, class]
-        pred = torch.argmax(logits, dim=-1)  # [B]
-
-        # backward pass
-        loss = self.adv_func(logits, target).mean()
-        loss.backward()
-        with torch.no_grad():
-            grad = data.grad.detach()  # [B, 3, K]
-            if normalize:
-                norm = self.get_norm(grad)
-                grad = grad / (norm[:, None, None] + 1e-9)
-        return grad, pred
-
-    def attack(self, data, target, *args, **kwargs):
-        """One step FGM attack.
-
-        Args:
-            data (torch.FloatTensor): batch pc, [B, K, 3]
-            target (torch.LongTensor): target label, [B]
-        """
-        data = data.float().cuda().detach()
-        pc = data.clone().detach().transpose(1, 2).contiguous()
-        target = target.long().cuda()
-        
-        # gradient
-        normalized_grad, _ = self.get_gradient(pc, target)  # [B, 3, K]
-        perturbation = normalized_grad * self.budget
-        with torch.no_grad():
-            perturbation = perturbation.transpose(1, 2).contiguous()
-            data = data - perturbation  # no need to clip
-
-            # test attack performance
-            logits = self.model(data.transpose(1, 2).contiguous())
-            if isinstance(logits, tuple):
-                logits = logits[0]
-            pred = torch.argmax(logits, dim=-1)
-            success_num = (pred == target).sum().item()
-
-        print('Successfully attack {}/{}'.format(success_num, data.shape[0]))
-        torch.cuda.empty_cache()
-        return data.detach(), success_num
-
-
-class IFGM(FGM):
-    """Class for I-FGM attack.
-    """
-
-    def __init__(self, model, adv_func, clip_func,
-                 budget, step_size, num_iter,
-                 dist_metric='l2'):
-        """Iterative FGM attack.
-
-        Args:
-            model (torch.nn.Module): victim model
-            adv_func (function): adversarial loss function
-            clip_func (function): clipping method
-            budget (float): \epsilon ball for IFGM attack
-            step_size (float): attack step length
-            num_iter (int): number of iteration
-            dist_metric (str, optional): type of constraint. Defaults to 'l2'.
-        """
-        super(IFGM, self).__init__(model, adv_func, budget, dist_metric)
-        self.clip_func = clip_func
-        self.step_size = step_size
-        self.num_iter = num_iter
-
-    def attack(self, data, target, *args, **kwargs):
-        """Iterative FGM attack.
-
-        Args:
-            data (torch.FloatTensor): batch pc, [B, K, 3]
-            target (torch.LongTensor): target label
-        """
-        B, K = data.shape[:2]
-        data = data.float().cuda().detach()
-        pc = data.clone().detach().transpose(1, 2).contiguous()
-        pc = pc + torch.randn((B, 3, K)).cuda() * 1e-7
-        ori_pc = pc.clone().detach()
-        target = target.long().cuda()
-
-        # start iteration
-        for iteration in range(self.num_iter):
-            # gradient
-            normalized_grad, pred = self.get_gradient(pc, target)
-            success_num = (pred == target).sum().item()
-            if iteration % (self.num_iter // 5) == 0:
-                print('iter {}/{}, success: {}/{}'.
-                      format(iteration, self.num_iter,
-                             success_num, B))
-                torch.cuda.empty_cache()
-            perturbation = self.step_size * normalized_grad
-
-            # add perturbation and clip
-            with torch.no_grad():
-                pc = pc - perturbation
-                pc = self.clip_func(pc, ori_pc)
-
-        # end of iteration
-        with torch.no_grad():
-            logits = self.model(pc)
-            if isinstance(logits, tuple):
-                logits = logits[0]
-            pred = torch.argmax(logits, dim=-1)
-            success_num = (pred == target).sum().item()
-        print('Final success: {}/{}'.format(success_num, B))
-        return pc.transpose(1, 2).contiguous().detach(), \
-            success_num
-
-
-class MIFGM(FGM):
-    """Class for MI-FGM attack.
-    """
-
-    def __init__(self, model, adv_func, clip_func,
-                 budget, step_size, num_iter, mu=1.,
-                 dist_metric='l2'):
-        """Momentum enhanced iterative FGM attack.
-
-        Args:
-            model (torch.nn.Module): victim model
-            adv_func (function): adversarial loss function
-            clip_func (function): clipping method
-            budget (float): \epsilon ball for IFGM attack
-            step_size (float): attack step length
-            num_iter (int): number of iteration
-            mu (float): momentum factor
-            dist_metric (str, optional): type of constraint. Defaults to 'l2'.
-        """
-        super(MIFGM, self).__init__(model, adv_func,
-                                    budget, dist_metric)
-        self.clip_func = clip_func
-        self.step_size = step_size
-        self.num_iter = num_iter
-        self.mu = mu
-
-    def attack(self, data, target, *args, **kwargs):
-        """Momentum enhanced iterative FGM attack.
-
-        Args:
-            data (torch.FloatTensor): batch pc, [B, K, 3]
-            target (torch.LongTensor): target label
-        """
-        B, K = data.shape[:2]
-        data = data.float().cuda().detach()
-        pc = data.clone().detach().transpose(1, 2).contiguous()
-        pc = pc + torch.randn((B, 3, K)).cuda() * 1e-7
-        ori_pc = pc.clone().detach()
-        target = target.long().cuda()
-        momentum_g = torch.tensor(0.).cuda()
-
-        # start iteration
-        for iteration in range(self.num_iter):
-            # gradient
-            grad, pred = self.get_gradient(pc, target, normalize=False)
-            success_num = (pred == target).sum().item()
-            if iteration % (self.num_iter // 5) == 0:
-                print('iter {}/{}, success: {}/{}'.
-                      format(iteration, self.num_iter,
-                             success_num, B))
-                torch.cuda.empty_cache()
-
-            # grad is [B, 3, K]
-            # normalized by l1 norm
-            grad_l1_norm = torch.sum(torch.abs(grad), dim=[1, 2])  # [B]
-            normalized_grad = grad / (grad_l1_norm[:, None, None] + 1e-9)
-            momentum_g = self.mu * momentum_g + normalized_grad
-            g_norm = self.get_norm(momentum_g)
-            normalized_g = momentum_g / (g_norm[:, None, None] + 1e-9)
-            perturbation = self.step_size * normalized_g
-
-            # add perturbation and clip
-            with torch.no_grad():
-                print(self.get_norm(perturbation))
-                pc = pc - perturbation
-                pc = self.clip_func(pc, ori_pc)
-
-        # end of iteration
-        with torch.no_grad():
-            logits = self.model(pc)
-            if isinstance(logits, tuple):
-                logits = logits[0]
-            pred = torch.argmax(logits, dim=-1)
-            success_num = (pred == target).sum().item()
-        print('Final success: {}/{}'.format(success_num, B))
-        return pc.transpose(1, 2).contiguous().detach(), \
-            success_num
-
-
-class PGD(IFGM):
-    """Class for PGD attack.
-    """
-
-    def __init__(self, model, adv_func, clip_func,
-                 budget, step_size, num_iter,
-                 dist_metric='l2'):
-        """PGD attack.
-
-        Args:
-            model (torch.nn.Module): victim model
-            adv_func (function): adversarial loss function
-            clip_func (function): clipping method
-            budget (float): \epsilon ball for IFGM attack
-            step_size (float): attack step length
-            num_iter (int): number of iteration
-            dist_metric (str, optional): type of constraint. Defaults to 'l2'.
-        """
-        super(PGD, self).__init__(model, adv_func, clip_func,
-                                  budget, step_size, num_iter,
-                                  dist_metric)
-
-    def attack(self, data, target, *args, **kwargs):
-        """PGD attack.
-
-        Args:
-            data (torch.FloatTensor): batch pc, [B, K, 3]
-            target (torch.LongTensor): target label
-        """
-        # the only difference between IFGM and PGD is
-        # the initialization of noise
-        epsilon = self.budget / \
-            ((data.shape[1] * data.shape[2]) ** 0.5)
-        init_perturbation = \
-            torch.empty_like(data).uniform_(-epsilon, epsilon)
-        with torch.no_grad():
-            init_data = data + init_perturbation
-        return super(PGD, self).attack(init_data, target)
-
 
 class Identity_Attack:
     """Class for FGM attack.
@@ -294,7 +20,7 @@ class Identity_Attack:
         return data, success_num
     
     
-class PGD_PointDP:
+class PGD:
     def __init__(self, model, step=7, eps=0.05, alpha=0.01, p=np.inf):
         self.model = model
         self.step = step
@@ -347,3 +73,129 @@ class PGD_PointDP:
                 adv_data = (data+delta).detach_()
                 
         return adv_data.type(torch.cuda.FloatTensor).transpose(1, 2).contiguous(), 0
+
+#%%
+
+        
+if __name__ == "__main__":
+    import os
+    os.chdir("/home/robust/diffusion-point-cloud")
+
+    from models.dgcnn import PointNet, DGCNN_cls
+    import torch.nn as nn
+    from torch.utils.data import DataLoader
+    from dataset.modelnet40 import ModelNet40
+    import torch
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from FGM_attack import PGD as pgd_ifdefense
+    from attack.util.adv_utils import CrossEntropyAdvLoss, LogitsAdvLoss
+    from attack.util.clip_utils import ClipPointsL2
+    from attack.util.dist_utils import L2Dist
+    from attack.CW.Perturb import CWPerturb
+
+    class AttrDict(dict):
+        def __init__(self, *args, **kwargs):
+            super(AttrDict, self).__init__(*args, **kwargs)
+            self.__dict__ = self
+            
+    num_points = 1024
+    batch_size = 32
+    cuda = True
+    scale_mode = "none"
+    test_loader = DataLoader(ModelNet40(partition='test', num_points=num_points, scale_mode=scale_mode),
+                            batch_size=batch_size, shuffle=False, drop_last=False)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    budget = 0.05
+    num_iter = 500
+    attack_lr = 1e-2
+    p = 2.
+    adv_func = "logits"
+    kappa = 0
+    
+    model_path = "pretrained/model.1024.t7"
+    model = DGCNN_cls(args=AttrDict({"k":20, "dropout":0.5, "emb_dims":1024}))
+    model = nn.DataParallel(model)
+    model.load_state_dict(torch.load(model_path))
+    model = model.eval()    
+    
+    attack_type = "ifdefense"
+    
+    if attack_type == "ifdefense":
+        delta = budget
+        budget = budget * \
+            np.sqrt(num_points * 3)  # \delta * \sqrt(N * d)
+        num_iter = int(num_iter)
+        step_size = budget / float(num_iter)
+        # which adv_func to use?
+        if adv_func == 'logits':
+            adv_func = LogitsAdvLoss(kappa=kappa)
+        else:
+            adv_func = CrossEntropyAdvLoss()
+        clip_func = ClipPointsL2(budget=budget)
+        dist_func = L2Dist()
+        binary_step = 10
+        # attacker = pgd_ifdefense(model, adv_func, clip_func, budget, step_size,
+        #                          num_iter, "l2")
+        
+        attacker = CWPerturb(model, adv_func, dist_func,
+                         attack_lr=attack_lr,
+                         init_weight=10., max_weight=80.,
+                         binary_step=binary_step,
+                         num_iter=num_iter)
+    else:
+        attacker = PGD(model, num_iter, budget, attack_lr, p)
+
+    for i, batch in enumerate(test_loader):
+        print("Batch : ", i+1, "/", len(test_loader))
+        
+        # data, label, target_label = data.to(device), label.to(device).squeeze(), target_label.to(device).squeeze()
+        
+        data = batch['pointcloud'].to(device)
+        shift = batch['shift']
+        scale = batch['scale']
+        label = batch["cate"].to(device).view(-1)
+        
+        random_labels = torch.randint(0, 40, label.size(), device=device)
+        random_labels[random_labels == label] += 1
+        target_label = torch.remainder(random_labels, 40)
+
+        best_pc, _ = attacker.attack(data, target_label, label=label, scale=scale, shift=shift)
+        break
+    
+# %%
+    from dataset.modelnet40 import LABELS
+
+
+    fig = plt.figure()
+
+    ax = fig.add_subplot(projection="3d")
+
+    i= 9
+
+    rescaled_pc = (best_pc[i] * scale[i].numpy()) + shift[i].numpy()
+
+    rescaled_data = (data[i].cpu().numpy() * scale[i].numpy()) + shift[i].numpy()
+
+    print(scale[i])
+
+    print(shift[i])
+    # x, y, z = best_pc[i, :, 0].cpu().numpy(), best_pc[i, :, 1].cpu().numpy(), best_pc[i, :, 2].cpu().numpy()
+    # ax.scatter3D(x, y, z)
+
+    # x, y, z = data[i, :, 0].cpu().numpy(), data[i, :, 1].cpu().numpy(), data[i, :, 2].cpu().numpy()
+    # ax.scatter3D(x, y, z)
+
+    x, y, z = rescaled_pc[:, 0], rescaled_pc[:, 1], rescaled_pc[:, 2]
+    ax.scatter3D(x, y, z)
+
+    x, y, z = rescaled_data[:, 0], rescaled_data[:, 1], rescaled_data[:, 2]
+    ax.scatter3D(x, y, z)
+
+    print(LABELS[label[i].cpu().numpy()])
+    plt.show()
+
+
+# %%
