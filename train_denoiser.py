@@ -111,7 +111,7 @@ if args.model == 'pointnet2':
     input_dim_dict = {0:3, 1:128, 2:256, 3:1024, 4:None}
     assert 0<=args.layer_no<4
 elif args.model == 'dgcnn':
-    cls_model = DGCNN_cls(args).to(device)
+    cls_model = DGCNN_cls().to(device)
     input_dim_dict = {0:3, 1:64, 2:64, 3:128, 4:256}
     assert 0<=args.layer_no<5
 else:
