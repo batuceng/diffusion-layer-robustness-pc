@@ -50,11 +50,11 @@ class PointNet2_cls(nn.Module):
         else:
             norm = None
         l1_xyz, l1_points = self.sa1(xyz, norm) # l1_xyz: (B, 3, N) l1_points:(B, D, N), D=128, N=512 
-        print(f"L1 xyz:{l1_xyz.shape}, points:{l1_points.shape}")
+        # print(f"L1 xyz:{l1_xyz.shape}, points:{l1_points.shape}")
         l2_xyz, l2_points = self.sa2(l1_xyz, l1_points) # l1_xyz: (B, 3, N) l1_points:(B, D, N), D=256, N=128 
-        print(f"L2 xyz:{l2_xyz.shape}, points:{l2_points.shape}")
+        # print(f"L2 xyz:{l2_xyz.shape}, points:{l2_points.shape}")
         l3_xyz, l3_points = self.sa3(l2_xyz, l2_points) # l1_xyz: (B, 3, N) l1_points:(B, D, N), D=256, N=128 
-        print(f"L3 xyz:{l3_xyz.shape}, points:{l2_points.shape}")
+        # print(f"L3 xyz:{l3_xyz.shape}, points:{l3_points.shape}")
         x = l3_points.view(B, 1024)
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))
         x = self.drop2(F.relu(self.bn2(self.fc2(x))))

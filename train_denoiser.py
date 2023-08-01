@@ -108,7 +108,7 @@ device = torch.device("cuda" if (torch.cuda.is_available() and args.device=="cud
 # Classification Model
 if args.model == 'pointnet2':
     cls_model = PointNet2_cls().to(device)
-    input_dim_dict = {0:3, 1:128, 2:256, 3:256, 4:None}
+    input_dim_dict = {0:3, 1:128, 2:256, 3:1024, 4:None}
     assert 0<=args.layer_no<4
 elif args.model == 'dgcnn':
     cls_model = DGCNN_cls(args).to(device)
@@ -213,8 +213,10 @@ def validate_loss(it):
             model.eval()
             code = model.encode(ref)
             recons = model.decode(code, ref.size(1), flexibility=args.flexibility)
-        all_refs.append(ref * scale + shift)
-        all_recons.append(recons * scale + shift)
+            
+        # Keep ref and recon normalized to see normalized chamfer distance
+        # all_refs.append(ref * scale + shift)
+        # all_recons.append(recons * scale + shift)
 
     all_refs = torch.cat(all_refs, dim=0)
     all_recons = torch.cat(all_recons, dim=0)
