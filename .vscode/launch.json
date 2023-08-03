@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--t", "10", "--attack-type", "pgd_pointdp", "--test-size", "128"],
+            // "args": ["--t", "10", "--attack-type", "pgd_pointdp", "--test-size", "128"],
             "purpose": ["debug-in-terminal"]
         }
     ]

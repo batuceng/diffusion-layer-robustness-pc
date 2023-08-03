@@ -215,10 +215,10 @@ def validate_loss(it):
             recons = model.decode(code, ref.size(1), flexibility=args.flexibility)
             
         # Keep ref and recon normalized to see normalized chamfer distance
-        all_refs.append(ref)
-        # all_refs.append(ref * scale + shift)
-        all_recons.append(recons)
-        # all_recons.append(recons * scale + shift)
+        # all_refs.append(ref)
+        all_refs.append(ref * scale + shift)
+        # all_recons.append(recons)
+        all_recons.append(recons * scale + shift)
 
     all_refs = torch.cat(all_refs, dim=0)
     all_recons = torch.cat(all_recons, dim=0)

@@ -160,54 +160,54 @@ class ModelNet40(Dataset):
         return len(self.pointclouds)
     
 
-class ModelNet40Attack(Dataset):
-    def __init__(self, num_points, path):
-        self.path = path
-        self.transform = False
-        self.data, self.data_attack, self.label, self.shift, self.scale = self.load_data(self.path)
-        self.num_points = num_points
-        self.pointclouds = []
-        self.normalize()
+# class ModelNet40Attack(Dataset):
+#     def __init__(self, num_points, path):
+#         self.path = path
+#         self.transform = False
+#         self.data, self.data_attack, self.label, self.shift, self.scale = self.load_data(self.path)
+#         self.num_points = num_points
+#         self.pointclouds = []
+#         self.normalize()
     
-    def load_data(self, path):
-        data = np.load(os.path.join(path, "ref.npy"))
-        data_attack = np.load(os.path.join(path, "attack.npy"))
-        label = np.loadtxt(os.path.join(path, "true_label.txt"))
-        shift = np.load(os.path.join(path, "shift.npy"))
-        scale = np.load(os.path.join(path, "scale.npy"))
-        return data, data_attack, label, shift, scale
+#     def load_data(self, path):
+#         data = np.load(os.path.join(path, "ref.npy"))
+#         data_attack = np.load(os.path.join(path, "attack.npy"))
+#         label = np.loadtxt(os.path.join(path, "true_label.txt"))
+#         shift = np.load(os.path.join(path, "shift.npy"))
+#         scale = np.load(os.path.join(path, "scale.npy"))
+#         return data, data_attack, label, shift, scale
     
-    def normalize(self):
-        for idx, (pc, pc_attack, label, shift, scale) in enumerate(zip(self.data, self.data_attack, self.label, self.shift, self.scale)):
+#     def normalize(self):
+#         for idx, (pc, pc_attack, label, shift, scale) in enumerate(zip(self.data, self.data_attack, self.label, self.shift, self.scale)):
             
-            pc = (pc - shift) / scale
-            pc_attack = (pc_attack - shift) / scale
+#             pc = (pc - shift) / scale
+#             pc_attack = (pc_attack - shift) / scale
 
-            self.pointclouds.append({
-                    'pointcloud': pc,
-                    'attack': pc_attack,
-                    'cate': label,
-                    'id': idx,
-                    'shift': shift,
-                    'scale': scale
-                })
+#             self.pointclouds.append({
+#                     'pointcloud': pc,
+#                     'attack': pc_attack,
+#                     'cate': label,
+#                     'id': idx,
+#                     'shift': shift,
+#                     'scale': scale
+#                 })
         
-        # Deterministically shuffle the dataset
-        self.pointclouds.sort(key=lambda data: data['id'], reverse=False)
-        random.Random(2020).shuffle(self.pointclouds)
+#         # Deterministically shuffle the dataset
+#         self.pointclouds.sort(key=lambda data: data['id'], reverse=False)
+#         random.Random(2020).shuffle(self.pointclouds)
     
-    def __getitem__(self, item):
-        data = {k:v.clone() if isinstance(v, torch.Tensor) else copy(v) for k, v in self.pointclouds[item].items()}
-        # data["pointcloud"] = data["pointcloud"][:self.num_points]  # select first 1024 points
+#     def __getitem__(self, item):
+#         data = {k:v.clone() if isinstance(v, torch.Tensor) else copy(v) for k, v in self.pointclouds[item].items()}
+#         # data["pointcloud"] = data["pointcloud"][:self.num_points]  # select first 1024 points
         
-        if self.transform:
-            pointcloud = data["pointcloud"]
-            pointcloud = translate_pointcloud(pointcloud)
-            pointcloud = pointcloud[torch.randperm(pointcloud.size()[0])]
-            data["pointcloud"] = pointcloud
+#         if self.transform:
+#             pointcloud = data["pointcloud"]
+#             pointcloud = translate_pointcloud(pointcloud)
+#             pointcloud = pointcloud[torch.randperm(pointcloud.size()[0])]
+#             data["pointcloud"] = pointcloud
         
-        return data
+#         return data
 
-    def __len__(self):
-        return len(self.pointclouds)
+#     def __len__(self):
+#         return len(self.pointclouds)
     

@@ -13,7 +13,8 @@ import torch.nn as nn
 import sklearn.metrics as metrics
 from torch.utils.data import DataLoader
 from dataset.modelnet40 import ModelNet40
-from models.dgcnn import PointNet, DGCNN_cls
+from models.dgcnn import DGCNN_cls
+from models.pointnet2 import PointNet2_cls
 from models.denoiser import Identity, Layer_Denoiser
 from attack import Identity_Attack, PGD, Drop_PointDP
 from attack import CWKNN, CWAdd
@@ -24,18 +25,19 @@ from attack import ClipPointsL2, L2Dist, ChamferkNNDist, ProjectInnerClipLinf
 
 # Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--ckpt', type=str, default='logs/layer2/AE_2023_07_17__20_14_47/ckpt_1.611477_750000.pt')
-parser.add_argument('--t', type=int, default=0)
+# parser.add_argument('--ckpt', type=str, default='logs/layer2/AE_2023_07_17__20_14_47/ckpt_1.611477_750000.pt')
+# parser.add_argument('--t', type=int, default=0)
 # parser.add_argument('--categories', type=str_list, default=['airplane'])
-parser.add_argument('--save-dir', type=str, default='./denoise_results')
+parser.add_argument('--save-dir', type=str, default='./attack_data')
 parser.add_argument('--device', type=str, default='cuda')
-parser.add_argument('--exp-logs', type=str, default='experiment_logs')
 parser.add_argument('--test-size', type=int, default=np.inf)
 
 # Datasets and loaders
 # parser.add_argument('--dataset-path', type=str, default='./data/shapenet.hdf5')
 parser.add_argument('--batch-size', type=int, default=32)
-parser.add_argument('--scale-mode', type=str, default='shape_unit')
+parser.add_argument('--scale-mode', type=str, default='unit_sphere')
+parser.add_argument('--num-points', type=int, default=1024,
+                        help='num of points to use')
 
 # Attack arguments
 parser.add_argument('--attack-type', type=str, default="none")
@@ -47,8 +49,6 @@ parser.add_argument('--mu', type=float, default=1.,
                     help='momentum factor for MIFGM attack')
 parser.add_argument('--local-rank', default=-1, type=int,
                     help='node rank for distributed training')
-parser.add_argument('--num-points', type=int, default=1024,
-                        help='num of points to use')
 parser.add_argument('--adv-func', type=str, default='logits',
                         choices=['logits', 'cross_entropy'],
                         help='Adversarial loss function to use')
@@ -62,35 +62,12 @@ parser.add_argument('--binary-step', type=int, default=10, metavar='N', help='Bi
 parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
 parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                    choices=['pointnet', 'dgcnn'],
+                    choices=['pointnet2', 'dgcnn'],
                     help='Model to use, [pointnet, dgcnn]')
 parser.add_argument('--dataset', type=str, default='modelnet40', metavar='N',
                     choices=['modelnet40'])
-parser.add_argument('--epochs', type=int, default=250, metavar='N',
-                    help='number of episode to train ')
-parser.add_argument('--use-sgd', type=bool, default=True,
-                    help='Use SGD')
-parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
-                    help='learning rate (default: 0.001, 0.1 if using sgd)')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
-                    help='SGD momentum (default: 0.9)')
-parser.add_argument('--scheduler', type=str, default='cos', metavar='N',
-                    choices=['cos', 'step'],
-                    help='Scheduler to use, [cos, step]')
-parser.add_argument('--no-cuda', type=bool, default=False,
-                    help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--eval', type=bool,  default=True,
-                    help='evaluate the model')
-parser.add_argument('--dropout', type=float, default=0.5,
-                    help='initial dropout rate')
-parser.add_argument('--emb-dims', type=int, default=1024, metavar='N',
-                    help='Dimension of embeddings')
-parser.add_argument('--k', type=int, default=20, metavar='N',
-                    help='Num of nearest neighbors to use')
-parser.add_argument('--model-path', type=str, default='pretrained/model.1024.t7', metavar='N',
-                    help='Pretrained model path')
 parser.add_argument('--num-drop', type=int, default=200, metavar='N',
                         help='Number of dropping points')
 
@@ -105,31 +82,17 @@ def test(args, io):
 
     test_loader = DataLoader(ModelNet40(partition='test', num_points=args.num_points, scale_mode=args.scale_mode),
                             batch_size=args.batch_size, shuffle=False, drop_last=False)
-
     device = torch.device("cuda" if args.cuda else "cpu")
 
     #Try to load models
-    if args.model == 'pointnet':
-        model = PointNet().to(device)
+    if args.model == 'pointnet2':
+        model = PointNet2_cls().to(device)
     elif args.model == 'dgcnn':
-        model = DGCNN_cls(args).to(device)
+        model = DGCNN_cls().to(device)
     else:
         raise Exception("Not implemented")
 
-    model = nn.DataParallel(model)
-    model.load_state_dict(torch.load(args.model_path))
-    model = model.eval()
-    
-    
-    # Autoencoder
-    ae = None
-    if args.t != 0:
-        ckpt = torch.load(args.ckpt)
-        # ckpt["args"].input_dim = 3
-        # ckpt["args"].layer_no = 0
-        ae = AutoEncoder(ckpt['args']).to(args.device)
-        ae.load_state_dict(ckpt['state_dict'])
-        ae.eval()
+    model.eval()
         
     ###
     attacker = None
