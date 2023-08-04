@@ -187,7 +187,8 @@ class DGCNN_cls(nn.Module):
         return x, layer_data
 
     def load_pretrained(self, model_name="model.cls.1024.t7", root=dirname(dirname(abspath(__file__)))):
-        assert model_name in ["model.cls.1024.t7", "model.cls.2048.t7"]
+        assert model_name in ["model.cls.1024.t7"]
+        # assert model_name in ["model.cls.1024.t7", "model.cls.2048.t7"]
         weight_paths = download_dgcnn(root)
         weights = torch.load(weight_paths[model_name])
         weights = {k[7:]:v for (k,v) in weights.items()} # Remove 'module' prefix from all keys. Added due to nn.DataParalel on pretrainig
@@ -202,13 +203,13 @@ def download_dgcnn(root):
     if not os.path.exists(SUB_DIR):
         os.mkdir(SUB_DIR)
     if not os.path.exists(os.path.join(SUB_DIR, 'model.cls.1024.t7')):
-        www = 'https://github.com/antao97/dgcnn.pytorch/raw/master/pretrained/model.cls.1024.t7'
+        www = 'https://github.com/WangYueFt/dgcnn/blob/master/pytorch/pretrained/model.1024.t7'
         os.system('wget --no-check-certificate %s -P %s' % (www, SUB_DIR))
-    if not os.path.exists(os.path.join(SUB_DIR, 'model.cls.2048.t7')):
-        www = 'https://github.com/antao97/dgcnn.pytorch/raw/master/pretrained/model.cls.2048.t7'
-        os.system('wget --no-check-certificate %s -P %s' % (www, SUB_DIR))
+    # if not os.path.exists(os.path.join(SUB_DIR, 'model.cls.2048.t7')):
+        # www = 'https://github.com/antao97/dgcnn.pytorch/raw/master/pretrained/model.cls.2048.t7'
+        # os.system('wget --no-check-certificate %s -P %s' % (www, SUB_DIR))
     weight_paths["model.cls.1024.t7"] = os.path.join(SUB_DIR, 'model.cls.1024.t7')
-    weight_paths["model.cls.2048.t7"] = os.path.join(SUB_DIR, 'model.cls.2048.t7')
+    # weight_paths["model.cls.2048.t7"] = os.path.join(SUB_DIR, 'model.cls.2048.t7')
     return weight_paths
         
 if __name__ == "__main__":
