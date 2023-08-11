@@ -77,15 +77,19 @@ def farthest_point_sample(xyz, npoint):
     """
     device = xyz.device
     B, N, C = xyz.shape
-    centroids = torch.zeros(B, npoint, dtype=torch.long).to(device)
-    distance = torch.ones(B, N).to(device) * 1e10
-    farthest = torch.randint(0, N, (B,), dtype=torch.long).to(device)
-    batch_indices = torch.arange(B, dtype=torch.long).to(device)
+    centroids = torch.zeros(B, npoint, dtype=torch.long, device=device)
+    distance = torch.ones(B, N, device=device) * 1e10
+    # Added Generator to keep algorithm Deterministic
+    g_cpu = torch.Generator(device=device)
+    g_cpu.manual_seed(0)
+    farthest = torch.randint(0, N, (B,), dtype=torch.long, generator=g_cpu, device=device)
+    batch_indices = torch.arange(B, dtype=torch.long, device=device)
     for i in range(npoint):
         centroids[:, i] = farthest
         centroid = xyz[batch_indices, farthest, :].view(B, 1, 3)
         dist = torch.sum((xyz - centroid) ** 2, -1)
-        distance = torch.min(distance, dist)
+        mask = dist < distance
+        distance[mask] = dist[mask]
         farthest = torch.max(distance, -1)[1]
     return centroids
 
@@ -395,7 +399,7 @@ def download_pointmlp(root):
     if not os.path.exists(SUB_DIR):
         os.mkdir(SUB_DIR)
     if not os.path.exists(os.path.join(SUB_DIR, 'best_checkpoint.pth')):
-        www = 'https://web.northeastern.edu/smilelab/xuma/pointMLP/checkpoints/fixstd/scanobjectnn/model313Elite-20220220015842-2956/best_checkpoint.pth'
+        www = 'https://web.northeastern.edu/smilelab/xuma/pointMLP/checkpoints/fixstd/modelnet40/pointMLP-20220209053148-404/best_checkpoint.pth'
         os.system('wget --no-check-certificate %s -P %s' % (www, SUB_DIR))
     weight_paths["best_checkpoint.pth"] = os.path.join(SUB_DIR, 'best_checkpoint.pth')
     return weight_paths

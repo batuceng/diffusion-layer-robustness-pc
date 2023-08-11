@@ -141,8 +141,8 @@ def download_curvenet(root):
     if not os.path.exists(SUB_DIR):
         os.mkdir(SUB_DIR)
     if not os.path.exists(os.path.join(SUB_DIR, 'model.t7')):
-        www = 'https://drive.google.com/file/d/1_p7Jgm-VsRmnx6Ea4qGIgayv3g2IYIm4/view?usp=drive_link'
-        os.system('wget --no-check-certificate %s -P %s' % (www, SUB_DIR))
+        www = '1_p7Jgm-VsRmnx6Ea4qGIgayv3g2IYIm4'
+        os.system('gdown --no-check-certificate %s -O %s' % (www, os.path.join(SUB_DIR, 'model.t7')))
     weight_paths["model.t7"] = os.path.join(SUB_DIR, 'model.t7')
     return weight_paths
         
@@ -216,10 +216,13 @@ def farthest_point_sample(xyz, npoint):
     """
     device = xyz.device
     B, N, C = xyz.shape
-    centroids = torch.zeros(B, npoint, dtype=torch.long).to(device)
-    distance = torch.ones(B, N).to(device) * 1e10
-    farthest = torch.randint(0, N, (B,), dtype=torch.long).to(device) * 0
-    batch_indices = torch.arange(B, dtype=torch.long).to(device)
+    centroids = torch.zeros(B, npoint, dtype=torch.long, device=device)
+    distance = torch.ones(B, N, device=device) * 1e10
+    # Added Generator to keep algorithm Deterministic
+    g_cpu = torch.Generator(device=device)
+    g_cpu.manual_seed(0)
+    farthest = torch.randint(0, N, (B,), dtype=torch.long, generator=g_cpu, device=device)
+    batch_indices = torch.arange(B, dtype=torch.long, device=device)
     for i in range(npoint):
         centroids[:, i] = farthest
         centroid = xyz[batch_indices, farthest, :].view(B, 1, 3)

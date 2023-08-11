@@ -203,7 +203,7 @@ def download_dgcnn(root):
     if not os.path.exists(SUB_DIR):
         os.mkdir(SUB_DIR)
     if not os.path.exists(os.path.join(SUB_DIR, 'model.1024.t7')):
-        www = 'https://github.com/WangYueFt/dgcnn/blob/master/pytorch/pretrained/model.1024.t7'
+        www = 'https://github.com/WangYueFt/dgcnn/raw/master/pytorch/pretrained/model.1024.t7'
         os.system('wget --no-check-certificate %s -P %s' % (www, SUB_DIR))
     # if not os.path.exists(os.path.join(SUB_DIR, 'model.cls.2048.t7')):
         # www = 'https://github.com/antao97/dgcnn.pytorch/raw/master/pretrained/model.cls.2048.t7'

@@ -30,22 +30,24 @@ def index_points(points, idx):
     return new_points
 
 
-def farthest_point_sample(xyz, num_point):
+def farthest_point_sample(xyz, npoint):
     """
-    Using FPS to sample N points from a given point cloud.
     Input:
-        xyz: point cloud data, [B, N, C]
-        num_point: number of samples
+        xyz: pointcloud data, [B, N, 3]
+        npoint: number of samples
     Return:
-        centroids: sampled point cloud index, [B, num_points]
+        centroids: sampled pointcloud index, [B, npoint]
     """
     device = xyz.device
     B, N, C = xyz.shape
-    centroids = torch.zeros(B, num_point, dtype=torch.long).to(device)
-    distance = torch.ones(B, N).to(device) * 1e10
-    farthest = torch.randint(0, N, (B,), dtype=torch.long).to(device)
-    batch_indices = torch.arange(B, dtype=torch.long).to(device)
-    for i in range(num_point):
+    centroids = torch.zeros(B, npoint, dtype=torch.long, device=device)
+    distance = torch.ones(B, N, device=device) * 1e10
+    # Added Generator to keep algorithm Deterministic
+    g_cpu = torch.Generator(device=device)
+    g_cpu.manual_seed(0)
+    farthest = torch.randint(0, N, (B,), dtype=torch.long, generator=g_cpu, device=device)
+    batch_indices = torch.arange(B, dtype=torch.long, device=device)
+    for i in range(npoint):
         centroids[:, i] = farthest
         centroid = xyz[batch_indices, farthest, :].view(B, 1, 3)
         dist = torch.sum((xyz - centroid) ** 2, -1)
@@ -123,27 +125,30 @@ def index_points_np(points, idx):
     """
     return points[idx]
 
-
-def farthest_point_sample_np(xyz, num_point):
+def farthest_point_sample(xyz, npoint):
     """
-    Using FPS to sample N points from a given point cloud.
     Input:
-        xyz: point cloud data, [N, C]
-        num_point: number of samples
+        xyz: pointcloud data, [B, N, 3]
+        npoint: number of samples
     Return:
-        centroids: sampled point cloud index, [num_points]
+        centroids: sampled pointcloud index, [B, npoint]
     """
-    N, C = xyz.shape
-    centroids = np.zeros((num_point,), dtype=np.int)
-    distance = np.ones((N,)) * 1e10
-    farthest = np.random.randint(0, N)
-    for i in range(num_point):
-        centroids[i] = farthest
-        centroid = xyz[farthest]  # [C]
-        dist = np.sum((xyz - centroid[None, :]) ** 2, axis=1)  # [N]
+    device = xyz.device
+    B, N, C = xyz.shape
+    centroids = torch.zeros(B, npoint, dtype=torch.long, device=device)
+    distance = torch.ones(B, N, device=device) * 1e10
+    # Added Generator to keep algorithm Deterministic
+    g_cpu = torch.Generator(device=device)
+    g_cpu.manual_seed(0)
+    farthest = torch.randint(0, N, (B,), dtype=torch.long, generator=g_cpu, device=device)
+    batch_indices = torch.arange(B, dtype=torch.long, device=device)
+    for i in range(npoint):
+        centroids[:, i] = farthest
+        centroid = xyz[batch_indices, farthest, :].view(B, 1, 3)
+        dist = torch.sum((xyz - centroid) ** 2, -1)
         mask = dist < distance
         distance[mask] = dist[mask]
-        farthest = np.argmax(distance)
+        farthest = torch.max(distance, -1)[1]
     return centroids
 
 
