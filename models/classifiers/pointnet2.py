@@ -99,7 +99,6 @@ class PointNet2_cls(nn.Module):
     def load_pretrained(self, model_name="best_model.pth", root=dirname(abspath(__file__)) ):
         assert model_name in ["best_model.pth"]
         weight_paths = download_pointnet2(root)
-        print(weight_paths[model_name])
         weights = torch.load(weight_paths[model_name])
         self.load_state_dict(weights['model_state_dict'])
     

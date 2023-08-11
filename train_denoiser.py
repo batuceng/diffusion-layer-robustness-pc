@@ -15,8 +15,7 @@ from util.evaluation_metrics import EMD_CD
 from dataset.modelnet40 import ModelNet40
 from models.autoencoder import AutoEncoder
 from models.common import get_linear_scheduler
-from models.dgcnn import DGCNN_cls
-from models.pointnet2 import PointNet2_cls
+from models import DGCNN_cls, PointNet2_cls
 from models.denoiser import Identity
 import time
 

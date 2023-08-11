@@ -221,7 +221,7 @@ def farthest_point_sample(xyz, npoint):
     # Added Generator to keep algorithm Deterministic
     g_cpu = torch.Generator(device=device)
     g_cpu.manual_seed(0)
-    farthest = torch.randint(0, N, (B,), dtype=torch.long, generator=g_cpu, device=device)
+    farthest = torch.randint(0, N, (B,), dtype=torch.long, generator=g_cpu, device=device) * 0
     batch_indices = torch.arange(B, dtype=torch.long, device=device)
     for i in range(npoint):
         centroids[:, i] = farthest

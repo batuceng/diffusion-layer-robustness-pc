@@ -59,23 +59,24 @@ dataset = ModelNet40(num_points=1024,partition='test', scale_mode='none')
 
 test_loader = DataLoader(dataset, batch_size=16, shuffle=False, drop_last=False)
 
-modelName = 'PointMLP'
-print(modelName)
+# modelName = 'PointNet'
 
 model_dict = {
     'CurveNet': CurveNet_cls, #0.938412
-    "PCT":      PCT_cls, #0.9333144
-    "PointMLP": PointMLP_cls, #0.940843
+    "PCT":      PCT_cls, #0.931524
+    "PointMLP": PointMLP_cls, #0.940032
     "DGCNN":    DGCNN_cls, #0.928687
-    "PointNet2":    PointNet2_cls, #0.915316
-    "PointNet":    PointNet_cls, #0.896677
+    "PointNet2":PointNet2_cls, #0.911264
+    "PointNet": PointNet_cls, #0.896677
 }
 
-model = model_dict[modelName]()
+for modelName in model_dict.keys():
+    print(modelName)
+    model = model_dict[modelName]()
 
-model.cuda()
-model.eval()
+    model.cuda()
+    model.eval()
 
-test(model, test_loader)
+    test(model, test_loader)
 
 

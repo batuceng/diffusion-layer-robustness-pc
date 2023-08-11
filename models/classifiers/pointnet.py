@@ -56,13 +56,26 @@ class PointNet_cls(nn.Module):
         return x, layer_data
 
 
-    def load_pretrained(self, model_name="best_pointnet_model.pth", root=os.path.join(*[dirname(dirname(abspath(__file__))),\
-                                                                               "log","classification"])):
+    def load_pretrained(self, model_name="best_pointnet_model.pth", root=dirname(abspath(__file__)) ):
         assert model_name in ["best_pointnet_model.pth"]
-        weight_paths = {model_name: os.path.join(root,model_name)}
+        weight_paths = download_pointnet(root)
         # print(weight_paths[model_name])
         weights = torch.load(weight_paths[model_name])
         self.load_state_dict(weights['model_state_dict'])
+        
+def download_pointnet(root):
+    weight_paths = {}
+    DATA_DIR = os.path.join(root, 'pretrained')
+    SUB_DIR = os.path.join(DATA_DIR, 'pointnet_weights')
+    if not os.path.exists(DATA_DIR):
+        os.mkdir(DATA_DIR)
+    if not os.path.exists(SUB_DIR):
+        os.mkdir(SUB_DIR)
+    if not os.path.exists(os.path.join(SUB_DIR, 'best_pointnet_model.pth')):
+        www = '1Q4h2vcF1dUWA-89anbaPl1D83Q7kmbY3'
+        os.system('gdown --no-check-certificate %s -O %s' % (www, os.path.join(SUB_DIR, 'best_pointnet_model.pth')))
+    weight_paths["best_pointnet_model.pth"] = os.path.join(SUB_DIR, 'best_pointnet_model.pth')
+    return weight_paths
 
 class get_loss(torch.nn.Module):
     def __init__(self, mat_diff_loss_scale=0.001):

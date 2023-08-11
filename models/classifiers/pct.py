@@ -362,7 +362,20 @@ def query_ball_point(radius, nsample, xyz, new_xyz):
     return group_idx
 
 
-def sample_and_group(npoint, radius, nsample, xyz, points, returnfps=False):
+def knn_point(nsample, xyz, new_xyz):
+    """
+    Input:
+        nsample: max sample number in local region
+        xyz: all points, [B, N, C]
+        new_xyz: query points, [B, S, C]
+    Return:
+        group_idx: grouped points index, [B, S, nsample]
+    """
+    sqrdists = square_distance(new_xyz, xyz)
+    _, group_idx = torch.topk(sqrdists, nsample, dim = -1, largest=False, sorted=False)
+    return group_idx
+
+def sample_and_group(npoint, radius, nsample, xyz, points):
     """
     Input:
         npoint:
@@ -375,19 +388,20 @@ def sample_and_group(npoint, radius, nsample, xyz, points, returnfps=False):
         new_points: sampled points data, [B, npoint, nsample, 3+D]
     """
     B, N, C = xyz.shape
-    S = npoint
-    fps_idx = farthest_point_sample(xyz, npoint) # [B, npoint, C]
-    new_xyz = index_points(xyz, fps_idx)
-    idx = query_ball_point(radius, nsample, xyz, new_xyz)
+    S = npoint 
+    xyz = xyz.contiguous()
+
+    fps_idx = farthest_point_sample(xyz, npoint).long() # [B, npoint]
+    new_xyz = index_points(xyz, fps_idx) 
+    new_points = index_points(points, fps_idx)
+    # new_xyz = xyz[:]
+    # new_points = points[:]
+
+    idx = knn_point(nsample, xyz, new_xyz)
+    #idx = query_ball_point(radius, nsample, xyz, new_xyz)
     grouped_xyz = index_points(xyz, idx) # [B, npoint, nsample, C]
     grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
-
-    if points is not None:
-        grouped_points = index_points(points, idx)
-        new_points = torch.cat([grouped_xyz_norm, grouped_points], dim=-1) # [B, npoint, nsample, C+D]
-    else:
-        new_points = grouped_xyz_norm
-    if returnfps:
-        return new_xyz, new_points, grouped_xyz, fps_idx
-    else:
-        return new_xyz, new_points
+    grouped_points = index_points(points, idx)
+    grouped_points_norm = grouped_points - new_points.view(B, S, 1, -1)
+    new_points = torch.cat([grouped_points_norm, new_points.view(B, S, 1, -1).repeat(1, 1, nsample, 1)], dim=-1)
+    return new_xyz, new_points

@@ -13,8 +13,7 @@ import torch.nn as nn
 import sklearn.metrics as metrics
 from torch.utils.data import DataLoader
 from dataset.modelnet40 import ModelNet40
-from models.dgcnn import DGCNN_cls
-from models.pointnet2 import PointNet2_cls
+from models import DGCNN_cls, PointNet2_cls
 from models.denoiser import Identity, Layer_Denoiser
 from attack import Identity_Attack, PGD, Drop_PointDP
 from attack import CWKNN, CWAdd

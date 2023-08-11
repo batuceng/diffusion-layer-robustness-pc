@@ -12,8 +12,7 @@ from torch.utils.data import DataLoader
 from util.misc import IOStream, seed_all
 from dataset.modelnet40attack import ModelNet40Attack
 from models.autoencoder import AutoEncoder
-from models.dgcnn import DGCNN_cls
-from models.pointnet2 import PointNet2_cls
+from models import DGCNN_cls, PointNet2_cls
 from models.denoiser import Identity, Layer_Denoiser, Multiple_Layer_Denoiser
 from sklearn.metrics import accuracy_score
 from util.evaluation_metrics import EMD_CD
