@@ -129,7 +129,7 @@ class Pct(nn.Module):
         x = self.dp2(x)
         x = self.linear3(x)
 
-        return x
+        return x, layer_data
 
     
     def load_pretrained(self, model_name="model.t7", root=dirname(abspath(__file__)) ):

@@ -23,10 +23,14 @@ def test(model, test_loader):
         batch_size = data.size()[0]
         
         denoiser = Identity()
-        logits = model.forward_denoised(data, denoiser=denoiser)
+        logits, layers = model.forward_denoised(data, denoiser=denoiser)
         # logits = model.module(data)
         # logits = model(data)
-
+        
+        # for i,lay in enumerate(layers):
+        #     if lay == None: continue
+        #     print(f"{type(model)} no:{i}, shape:{lay.shape}")
+        # return None
 
         if len(logits) == 2:
             logits = logits[0]

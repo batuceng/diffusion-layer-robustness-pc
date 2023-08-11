@@ -120,7 +120,7 @@ class CurveNet(nn.Module):
         x = F.relu(self.bn1(self.conv1(x).unsqueeze(-1)), inplace=True).squeeze(-1)
         x = self.dp1(x)
         x = self.conv2(x)
-        return x
+        return x, layer_data
     
     def load_pretrained(self, model_name="model.t7", root=dirname(abspath(__file__)) ):
         assert model_name in ["model.t7"]
