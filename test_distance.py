@@ -16,6 +16,7 @@ from models.dgcnn import DGCNN_cls
 from models.pointnet2 import PointNet2_cls
 from models.denoiser import Identity, Layer_Denoiser, Multiple_Layer_Denoiser
 from sklearn.metrics import accuracy_score
+from util.evaluation_metrics import EMD_CD
 
 import warnings
 
@@ -30,7 +31,7 @@ available_models = [layer0, layer1, layer2, layer3]
 
 # Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-t_list', type=str, default='0,0,0,0')
+parser.add_argument('-t_list', type=str, default='5,0,0,0')
 
 parser.add_argument('--save-dir', type=str, default='./denoise_results')
 parser.add_argument('--device', type=str, default='cuda')
@@ -72,11 +73,29 @@ def get_logits(data, model, shift, scale, device, denoiser=Identity()):
     logits, layers = model.forward_denoised(input, denoiser)
     return logits.clone().detach().cpu(), [l.clone().detach().cpu() for l in layers]
 
+@torch.no_grad()
 def get_stats(labels, logits):
     preds = logits.max(dim=1)[1]
     acc = accuracy_score(labels.squeeze().numpy(), preds.squeeze().numpy())
     loss = F.cross_entropy(logits.to(torch.float64), labels.squeeze().to(torch.long))
     return acc, loss.item()
+
+@torch.no_grad()
+def get_layer_distances(layerA, layerB):
+    for la, lb in zip(layerA, layerB):
+        get_distances(la, lb)
+    pass
+
+    # ObjA Clean Pc, ObjB Denoised PC
+    def get_distances(objA, objB):
+        # L2
+        l2dist = torch.norm((objA-objB), p=2, dim=0)
+        # Linf
+        linfdist = torch.norm((objA-objB), torch.inf, dim=0)
+        # Chamfer
+        metrics = EMD_CD(layerB, layerA, batch_size=args.val_batch_size)
+        cd, emd = metrics['MMD-CD'].item(), metrics['MMD-EMD'].item()
+        return l2dist, linfdist, cd
 
 def test(args, io):
 
@@ -113,13 +132,13 @@ def test(args, io):
     denoised_preds_list = torch.tensor([]).view(0,40)
     defended_preds_list = torch.tensor([]).view(0,40)
     true_label_list = torch.tensor([]).view(0,1)
-        
+    
     # Number of point clouds to test the attack
     stop_iter = args.test_size // args.batch_size
-    stop_iter = 5
+    # stop_iter = 5
     
     for i, batch in enumerate(test_loader):
-        print(f"batch {i}/{len(test_loader)}")
+        # print(f"batch {i}/{len(test_loader)}")
         # Stop at specified batch number
         if i == stop_iter: break
         
@@ -149,6 +168,7 @@ def test(args, io):
         true_label_list = torch.cat((true_label_list, label), dim=0)
     
     
+    print(f"\n T_List: {args.t_list}")
     # Print out Results
     clean_acc, clean_loss = get_stats(true_label_list, clean_preds_list)
     print("Clean Acc:", clean_acc)

@@ -16,6 +16,7 @@ class Attack(object):
         self.model.to(device).eval()
         self.name = name
         self.seed = seed
+        self.device = device
         if seed is not None: seed_all(seed)
         
     def attack(self):

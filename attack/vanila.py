@@ -11,8 +11,9 @@ class VANILA(Attack):
     def __init__(self, model, device, seed=3):
         super().__init__('VANILA', model, device, seed)
         self.supported_mode = ['default']
+        self.targeted = None
 
-    def forward(self, data, labels=None):
+    def attack(self, data, labels):
         r"""
         Overridden.
         """

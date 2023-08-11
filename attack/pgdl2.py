@@ -5,7 +5,7 @@ from .attack import Attack
 
 class PGDL2(Attack):
     def __init__(self, model, device, eps=1.0, alpha=0.02, steps=10, random_start=True, seed=3):
-        super().__init__("PGDLinf", model, device, seed)
+        super().__init__("PGDL2", model, device, seed)
         # Attack Vals
         self.eps = eps
         self.alpha = alpha
