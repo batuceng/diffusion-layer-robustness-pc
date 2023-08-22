@@ -12,6 +12,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             // "args": ["--t", "10", "--attack-type", "pgd_pointdp", "--test-size", "128"],
+            "args": ["-model", "dgcnn", "pgd"],
             "purpose": ["debug-in-terminal"]
         }
     ]
