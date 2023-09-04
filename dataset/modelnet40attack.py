@@ -13,9 +13,10 @@ class ModelNet40Attack(Dataset):
         if not os.path.exists(path):
             raise FileNotFoundError
         self.filename = os.path.basename(path)
-        self.dataname, self.modelname, self.taskname, \
-            self.attackname, epsilonkeyword, self.eps = self.filename.split('_')
-        self.eps = self.eps.rsplit('.pt')
+        # print(self.filename)
+        # self.dataname, self.modelname, self.taskname, \
+        #     self.attackname, epsilonkeyword, self.eps = self.filename.split('_')
+        # self.eps = self.eps.rsplit('.pt')
         self.path = path
         self.transform = False
         self.datalist = self.load_data(self.path)

@@ -4,6 +4,7 @@ from .attack import Attack
 
 
 class PointDrop(Attack):
+    
     def __init__(self, model, device, num_points=200, steps=10, seed=3):
         super().__init__("PointDrop", model, device, seed)
         # Attack Vals
@@ -13,7 +14,7 @@ class PointDrop(Attack):
         # self.supported_mode = ['default', 'targeted']
         self.device = device
         self.targeted = False
-
+        
     
     def attack(self, data, labels):
         # data: (B, N, d); labels: (B, 1)

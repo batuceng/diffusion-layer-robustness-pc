@@ -50,15 +50,16 @@ class PGDL2(Attack):
             # Update adversarial images
             grad = torch.autograd.grad(cost, adv_data,
                                        retain_graph=False, create_graph=False)[0]
-            grad_norms = torch.norm(grad.view(batch_size, -1), p=2, dim=1) + 1e-10  # nopep8
-            grad = grad / grad_norms.view(batch_size, 1, 1)
+            # print(grad.shape)
+            grad_norms = torch.norm(grad.reshape(batch_size, -1), p=2, dim=1) + 1e-10  # nopep8
+            grad = grad / grad_norms.reshape(batch_size, 1, 1)
             adv_data = adv_data.detach() + self.alpha * grad
             # Project L2 Ball
             delta = adv_data - data
-            delta_norms = torch.norm(delta.view(batch_size, -1), p=2, dim=1)
+            delta_norms = torch.norm(delta.reshape(batch_size, -1), p=2, dim=1)
             factor = self.eps / delta_norms
             factor = torch.min(factor, torch.ones_like(delta_norms))
-            delta = delta * factor.view(-1, 1, 1)
+            delta = delta * factor.reshape(-1, 1, 1)
 
             adv_data = torch.clamp(data + delta, min=-1, max=1).detach()
 

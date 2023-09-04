@@ -7,10 +7,10 @@ import os
 
 from dataset.modelnet40 import ModelNet40
 from models import PCT_cls, DGCNN_cls, CurveNet_cls, PointMLP_cls, PointNet_cls, PointNet2_cls
-from attack import PGDLinf, PGDL2, VANILA, PointDrop
+from attack import PGDLinf, PGDL2, VANILA, PointDrop, PointAdd, CW, KNN
 
 def none_or_str(value):
-    if value == 'None':
+    if value.lower() == 'none':
         return None
     return value
 
@@ -55,6 +55,40 @@ parser_pgdl2.add_argument('--num_points', type=int, default=200,
                         help='Number of points to drop')
 parser_pgdl2.add_argument('--steps', type=int, default=10,
                         help='Number of iteration steps for drop')
+
+# subparsers for PointAdd Attack
+parser_pgdl2 = subparsers.add_parser('add')
+parser_pgdl2.add_argument('--num_points', type=int, default=200,
+                        help='Number of points to drop')
+parser_pgdl2.add_argument('--steps', type=int, default=10,
+                        help='Number of iteration steps for drop')
+parser_pgdl2.add_argument('--eps', type=float, default=0.05,
+                        help='L2 eps bound')
+parser_pgdl2.add_argument('--lr', type=float, default=0.01,
+                        help='learning rate of the Adam optimizer')
+parser_pgdl2.add_argument('--p', type=str, default="inf", choices=["inf", "2", "1"],
+                          help="Distance metric")
+
+# subparsers for CW Attack
+parser_pgdl2 = subparsers.add_parser('cw')
+parser_pgdl2.add_argument('--c', type=int, default=1,
+                        help='c in the paper. parameter for box-constraint.')
+parser_pgdl2.add_argument('--kappa', type=int, default=0,
+                        help='kappa (also written as confidence) in the paper.')
+parser_pgdl2.add_argument('--steps', type=int, default=200,
+                        help='Number of iteration steps')
+parser_pgdl2.add_argument('--lr', type=float, default=0.01,
+                        help='learning rate of the Adam optimizer')
+
+# subparsers for KNN Attack
+parser_pgdl2 = subparsers.add_parser('knn')
+parser_pgdl2.add_argument('--steps', type=int, default=200,
+                        help='Number of iteration steps')
+parser_pgdl2.add_argument('--kappa', type=int, default=0,
+                        help='kappa (also written as confidence) in the paper.')
+parser_pgdl2.add_argument('--lr', type=float, default=0.01,
+                        help='learning rate of the Adam optimizer')
+
 # Parse args
 parser._action_groups.reverse()
 
@@ -78,6 +112,9 @@ attack_dict = {
     'pgdl2':    PGDL2,
     'drop':     PointDrop,
     'vanila':   VANILA,
+    'cw': CW,
+    'add': PointAdd,
+    'knn': KNN
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -95,12 +132,19 @@ elif args.attack == 'vanila':
     atk = VANILA(model=model, device=device)
 elif args.attack == 'drop':
     atk = PointDrop(model=model, device=device, num_points=args.num_points, steps=args.steps)
+elif args.attack == 'add':
+    atk = PointAdd(model=model, device=device, steps=args.steps, eps=args.eps, lr=args.lr, p=args.p, num_points=200, seed=3)
+elif args.attack == "cw":
+    atk = CW(model=model, device=device, c=args.c, kappa=args.kappa, steps=args.steps, lr=args.lr)
+elif args.attack == "knn":
+    atk = KNN(model=model, device=device, steps=args.steps, lr=args.lr)
 else:
     raise NotImplementedError
 
 # Define subfolders to save
-savedir = os.path.join(*[args.save_path, args.attack, args.model])
-filename = os.path.join(savedir,datetime.today().strftime('ATK_%Y_%m_%d__%H_%M_%S'))
+savedir = os.path.join(*[args.save_path, args.attack, args.model]) if args.save_path is not None else None
+filename = os.path.join(savedir,datetime.today().strftime('ATK_%Y_%m_%d__%H_%M_%S')) if savedir is not None else None
+
 # Apply Attack & Save
 atk.save(dataloader=test_loader, root=savedir, file_name=filename, args=vars(args))
 

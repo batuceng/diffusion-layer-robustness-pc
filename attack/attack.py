@@ -30,9 +30,8 @@ class Attack(object):
     def save(self, dataloader, root=os.path.join(dirname(dirname(abspath(__file__))),"data_attacked"), file_name=None, args=None):
         true_labels, clean_preds, attack_preds = [], [], []
         attacked_batches = []
-        
         for i,batch in enumerate(dataloader):
-            # print(f"batch {i}/{len(dataloader)}")
+            print(f"batch {i}/{len(dataloader)}")
             pc, label = batch['pointcloud'], batch['cate']
             # Forward
             logits = self.get_logits(pc)
@@ -67,11 +66,18 @@ class Attack(object):
                     FILE_NAME = os.path.join(DATA_DIR, f'{datasetname}_{modelname}_{self.name}_eps_{self.eps}')
                 elif self.name == 'PointDrop':
                     FILE_NAME = os.path.join(DATA_DIR, f'{datasetname}_{modelname}_{self.name}_num_points_{self.num_points}')
+                elif self.name == "PointAdd":
+                    FILE_NAME = os.path.join(DATA_DIR, f'{datasetname}_{modelname}_{self.name}_num_points_{self.num_points}')
+                elif self.name == 'cw':
+                    FILE_NAME = os.path.join(DATA_DIR, f'{datasetname}_{modelname}_{self.name}_c_{self.c}_kappa_{self.kappa}_lr_{self.lr}')
+                elif self.name == 'knn':
+                    FILE_NAME = os.path.join(DATA_DIR, f'{datasetname}_{modelname}_{self.name}_c_{self.c}_kappa_{self.kappa}_lr_{self.lr}')
                 elif self.name == 'VANILA':
-                    FILE_NAME = os.path.join(DATA_DIR, f'{datasetname}_{modelname}_{self.name}')
+                    FILE_NAME = os.path.join(DATA_DIR, f'{datasetname}_{modelname}_{self.name}_kappa_{self.kappa}_lr_{self.lr}')
                 else:
                     raise NotImplementedError
             else: FILE_NAME = file_name
+            
             # Dump Data as .pt
             torch.save(attacked_batches,f=FILE_NAME+'.pt')
             # Dump args as .json, pass a dictionary (even empty one) to save additional args
