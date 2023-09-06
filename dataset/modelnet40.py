@@ -84,7 +84,7 @@ def rotate_pointcloud(pointcloud):
 # Rewritten ModelNet40 dataloader based on ShapeNetCore class
 
 class ModelNet40(Dataset):
-    def __init__(self, num_points, scale_mode, partition='train'):
+    def __init__(self, num_points, scale_mode="none", partition='train'):
         self.data, self.label = load_data_cls(partition)
         self.num_points = num_points
         self.partition = partition

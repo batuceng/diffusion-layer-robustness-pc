@@ -93,7 +93,7 @@ if args.dataset == "modelnet40":
     train_iter = get_data_iterator(DataLoader(
         train_dset,
         batch_size=args.train_batch_size,
-        num_workers=0,
+        num_workers=8,
     ))
 
     test_loader = DataLoader(ModelNet40(partition='test', scale_mode=args.scale_mode, num_points=args.num_points), num_workers=8,

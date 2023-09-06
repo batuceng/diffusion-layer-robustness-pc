@@ -24,13 +24,6 @@ def test(model, test_loader):
         
         denoiser = Identity()
         logits, layers = model.forward_denoised(data, denoiser=denoiser)
-        # logits = model.module(data)
-        # logits = model(data)
-        
-        # for i,lay in enumerate(layers):
-        #     if lay == None: continue
-        #     print(f"{type(model)} no:{i}, shape:{lay.shape}")
-        # return None
 
         if len(logits) == 2:
             logits = logits[0]
@@ -44,11 +37,6 @@ def test(model, test_loader):
     outstr = 'Test :: test acc: %.6f'%(test_acc)
     print(outstr)
 
-
-class AttrDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
 
 class Identity(nn.Module):
     def __init__(self, *args, **kwargs):
