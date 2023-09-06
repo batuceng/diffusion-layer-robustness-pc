@@ -7,7 +7,10 @@ import os
 import argparse
 import torch
 import numpy as np
+import json
+
 import torch.nn.functional as F
+from datetime import datetime
 from torch.utils.data import DataLoader
 from util.misc import IOStream, seed_all
 from dataset.modelnet40attack import ModelNet40Attack
@@ -66,11 +69,50 @@ model_path_dict = {
     ],
 }
 
+attacked_data_list = [
+"data_attacked/add/curvenet/ATK_2023_09_04__14_31_22.pt",
+"data_attacked/add/curvenet/ATK_2023_09_04__20_35_40.pt",
+"data_attacked/add/dgcnn/ATK_2023_09_04__14_25_51.pt",
+"data_attacked/add/pct/ATK_2023_09_04__14_27_41.pt",
+"data_attacked/add/pointnet2/ATK_2023_09_04__14_23_18.pt",
+"data_attacked/add/pointnet/ATK_2023_09_04__14_23_00.pt",
+"data_attacked/cw/curvenet/ATK_2023_09_04__17_01_08.pt",
+"data_attacked/cw/curvenet/ATK_2023_09_04__21_25_56.pt",
+"data_attacked/cw/dgcnn/ATK_2023_09_04__16_27_26.pt",
+"data_attacked/cw/pct/ATK_2023_09_04__16_30_39.pt",
+"data_attacked/cw/pointnet2/ATK_2023_09_04__16_22_23.pt",
+"data_attacked/cw/pointnet/ATK_2023_09_04__16_21_49.pt",
+"data_attacked/drop/curvenet/ATK_2023_08_18__16_45_05.pt",
+"data_attacked/drop/dgcnn/ATK_2023_08_18__16_39_59.pt",
+"data_attacked/drop/pct/ATK_2023_08_18__16_41_23.pt",
+"data_attacked/drop/pointmlp/ATK_2023_08_22__14_51_27.pt",
+"data_attacked/drop/pointnet2/ATK_2023_08_18__16_37_32.pt",
+"data_attacked/drop/pointnet/ATK_2023_08_18__16_37_15.pt",
+"data_attacked/knn/curvenet/ATK_2023_09_04__15_50_20.pt",
+"data_attacked/knn/curvenet/ATK_2023_09_04__20_45_54.pt",
+"data_attacked/knn/dgcnn/ATK_2023_09_04__14_59_46.pt",
+"data_attacked/knn/pct/ATK_2023_09_04__15_03_21.pt",
+"data_attacked/knn/pointnet2/ATK_2023_09_04__14_41_10.pt",
+"data_attacked/knn/pointnet/ATK_2023_09_04__14_38_05.pt",
+"data_attacked/pgd/curvenet/ATK_2023_08_18__16_12_20.pt",
+"data_attacked/pgd/dgcnn/ATK_2023_08_18__15_58_47.pt",
+"data_attacked/pgdl2/curvenet/ATK_2023_08_18__16_30_20.pt",
+"data_attacked/pgdl2/dgcnn/ATK_2023_08_18__16_26_09.pt",
+"data_attacked/pgdl2/pointmlp/ATK_2023_08_22__15_45_25.pt",
+"data_attacked/pgdl2/pointnet2/ATK_2023_08_18__16_19_48.pt",
+"data_attacked/pgdl2/pointnet/ATK_2023_08_18__16_19_14.pt",
+"data_attacked/pgd/pct/ATK_2023_08_18__16_02_45.pt",
+"data_attacked/pgd/pointmlp/ATK_2023_08_22__15_03_43.pt",
+"data_attacked/pgd/pointnet2/ATK_2023_08_18__15_52_25.pt",
+"data_attacked/pgd/pointnet/ATK_2023_08_18__15_51_52.pt"
+]
+
+
 # Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('-t_list', type=str, default='5,5,5,5,5')
 
-parser.add_argument('--save-dir', type=str, default='./denoise_results')
+parser.add_argument('--save-path', type=str, default='./dist_results')
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--exp-logs', type=str, default='experiment_logs')
 parser.add_argument('--test_size', type=int, default=np.inf)
@@ -89,12 +131,12 @@ parser.add_argument('--dataset', type=str, default='modelnet40attack', metavar='
                     choices=['modelnet40attack'])
 parser.add_argument('--num-points', type=int, default=1024,
                         help='num of points to use')
-
 parser.add_argument('--no-cuda', type=bool, default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--data_attacked', type=str, default="data_attacked/pgdl2/curvenet/ATK_2023_08_18__16_30_20.pt")
+parser.add_argument('--attack', type=str, default="cw")
+
 
 model_dict = {
     'curvenet': CurveNet_cls, #0.938412
@@ -107,6 +149,9 @@ model_dict = {
 
 args = parser.parse_args()
 seed_all(args.seed)
+
+args.data_attacked = list(filter(lambda x: args.model in x and args.attack in x, attacked_data_list))[0]
+args.json_path = args.data_attacked.split(".pt")[0] + ".json"
 
 args.t_list = [int(i.strip()) for i in args.t_list.split(",")]
 
@@ -221,7 +266,8 @@ def test(args, io):
     # stop_iter = 5
     
     for i, batch in enumerate(test_loader):
-        print(f"batch {i}/{len(test_loader)}")
+        # print(f"batch {i}/{len(test_loader)}")
+        
         # Stop at specified batch number
         if i == stop_iter: break
         
@@ -236,8 +282,6 @@ def test(args, io):
         clean_logits, clean_layers = get_logits(data, model, shift, scale, device)
         clean_preds_list = torch.cat((clean_preds_list, clean_logits), dim=0)
         for i in range(layer_len):
-            print(clean_layers_dict[i].shape)
-            print(clean_layers[i].shape)
             clean_layers_dict[i] = torch.cat((clean_layers_dict[i], clean_layers[i].transpose(1, 2)), dim=0)
         
         # Prediction on attacked data
@@ -271,6 +315,9 @@ def test(args, io):
     denoised_acc, denoised_loss = get_stats(true_label_list, denoised_preds_list)
     defended_acc, defended_loss = get_stats(true_label_list, defended_preds_list)
     
+    
+    result_dict = {}
+    
     print(f"\n T_List: {args.t_list} \n")
     print("Clean Acc:", clean_acc)
     print("Clean Loss:", clean_loss)
@@ -279,6 +326,7 @@ def test(args, io):
     print("Attacked dists")
     for i in input_dim_dict:
         print(f"Layer {i}:", "L2:", attacked_dist[i][0], "Linf:", attacked_dist[i][1], "CD:", attacked_dist[i][2])
+        result_dict[f"Layer {i} distances"] = {"L2": attacked_dist[i][0], "Linf":attacked_dist[i][1], "CD": attacked_dist[i][2]}
     print("Attacked Acc:", attacked_acc)
     print("Attacked Loss:", attacked_loss)
     print("-"*30)
@@ -286,6 +334,7 @@ def test(args, io):
     print("Denoised dists")
     for i in input_dim_dict:
         print(f"Layer {i}:", "L2:", denoised_dist[i][0], "Linf:", denoised_dist[i][1], "CD:", denoised_dist[i][2])
+        result_dict[f"Layer {i} distances"] = {"L2": denoised_dist[i][0], "Linf":denoised_dist[i][1], "CD": denoised_dist[i][2]}
     print("Denoised Acc:", denoised_acc)
     print("Denoised Loss:", denoised_loss)
     print("-"*30)
@@ -293,55 +342,44 @@ def test(args, io):
     print("Defended dists")
     for i in input_dim_dict:
         print(f"Layer {i}:", "L2:", defended_dist[i][0], "Linf:", defended_dist[i][1], "CD:", defended_dist[i][2])
+        result_dict[f"Layer {i} distances"] = {"L2": defended_dist[i][0], "Linf":defended_dist[i][1], "CD": defended_dist[i][2]}
     print("Defended Acc:", defended_acc)
     print("Defended Loss:", defended_loss)
     print()
-    print("Geo-Mean Acc:", np.sqrt((denoised_acc**2 + defended_acc**2)/2))  
     
-    # test_acc = metrics.accuracy_score(test_true, test_pre_attack_pred)
-    # avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pre_attack_pred)
-    # outstr = 'Test pre attack :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
-    # io.cprint(outstr)
+    geo_mean = np.sqrt((denoised_acc**2 + defended_acc**2)/2)
+    print("Geo-Mean Acc:", geo_mean)
     
-    # test_acc = metrics.accuracy_score(test_true, test_pre_attack_defense)
-    # avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pre_attack_defense)
-    # outstr = 'Test pre attack defense :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
-    # io.cprint(outstr)
+    result_dict["Clean_loss"] = clean_loss
+    result_dict["Attacked_loss"] = attacked_loss
+    result_dict["Denoised_loss"] = denoised_loss
+    result_dict["Defended_loss"] = defended_loss
     
-    # test_acc = metrics.accuracy_score(test_true, test_attack_pred)
-    # avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_attack_pred)
-    # outstr = 'Test attack :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
-    # io.cprint(outstr)
-    
-    # test_acc = metrics.accuracy_score(test_true, test_defended_pred)
-    # avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_defended_pred)
-    # outstr = 'Test defense :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
-    # io.cprint(outstr)
-    # io.cprint("\n")
-    
-    
-# # Logging
-# save_dir = os.path.join(args.save_dir, 'AE_Ours_%s_%d' % ('_'.join(args.categories), int(time.time())) )
-# if not os.path.exists(save_dir):
-#     os.makedirs(save_dir)
-# logger = get_logger('test', save_dir)
-# for k, v in vars(args).items():
-#     logger.info('[ARGS::%s] %s' % (k, repr(v)))
+    result_dict["Clean_acc"] = clean_acc
+    result_dict["Attacked_acc"] = attacked_acc
+    result_dict["Denoised_acc"] = denoised_acc
+    result_dict["Defended_acc"] = defended_acc
+    result_dict["Geo-Mean_acc"] = geo_mean
 
-# # Checkpoint
-# ckpt = torch.load(args.ckpt)
-
+    
+    savedir = os.path.join(*[args.save_path, args.model, args.data_attacked.split("/")[1], "T__" + str("_".join([str(i) for i in args.t_list]))]) if args.save_path is not None else None
+    filename = os.path.join(savedir, datetime.today().strftime('RESULT_%Y_%m_%d__%H_%M_%S')) if savedir is not None else None
+    
+    os.makedirs(savedir, exist_ok=True)
+    
+    args_dict = vars(args)
+    with open(args.json_path, "r") as file:
+        args_dict["attack_args"] = json.load(file)
+    
+    args_dict |= {"data_path":filename}
+    args_dict |= result_dict
+    with open(filename+'.json', 'w') as fp:
+        json.dump(args_dict, fp)
+        fp.close()
 
 io = IOStream('outputs/' + args.exp_name + '/run.log')
-# io.cprint(str(args))
 
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 torch.manual_seed(args.seed)
-# if args.cuda:
-#     io.cprint(
-#         'Using GPU : ' + str(torch.cuda.current_device()) + ' from ' + str(torch.cuda.device_count()) + ' devices')
-#     torch.cuda.manual_seed(args.seed)
-# else:
-#     io.cprint('Using CPU')
 
 test(args, io)

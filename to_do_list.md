@@ -17,4 +17,4 @@
 ### Ours
 - [x] Add distance reports to test_distances.py
 - [x] Pull pretrained models from Uhem
-- [ ] Test distance output to dist_results/{model_name}/{attack_name}/{t_list}/{timestamp}.json   Content --> Acc,dist,loss,args
+- [x] Implement test distance output to dist_results/{model_name}/{attack_name}/{t_list}/{timestamp}.json   Content --> Acc,dist,loss,args

@@ -27,7 +27,7 @@ class Attack(object):
         logits = self.model(inputs.permute(0,2,1).to(self.device))
         return logits
         
-    def save(self, dataloader, root=os.path.join(dirname(dirname(abspath(__file__))),"data_attacked"), file_name=None, args=None):
+    def save(self, dataloader, root=os.path.join(dirname(dirname(abspath(__file__))), "data_attacked"), file_name=None, args=None):
         true_labels, clean_preds, attack_preds = [], [], []
         attacked_batches = []
         for i,batch in enumerate(dataloader):

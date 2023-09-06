@@ -1,7 +1,7 @@
 #!/bin/bash
-for atk in 'pgd' 'pgdl2' 'drop'; 
-do for mdel in 'pointnet' 'pointnet2' 'dgcnn' 'pct' 'pointmlp' 'curvenet';
+for atk in 'add' 'knn' 'cw'; 
+do for mdel in 'curvenet';
 do
 echo $mdel $atk
-python attack_dataset.py -model $mdel $atk ;
+python attack_dataset.py --batch_size 16 -model $mdel $atk  ;
 done;done

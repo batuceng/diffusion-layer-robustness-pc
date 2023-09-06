@@ -112,9 +112,9 @@ attack_dict = {
     'pgdl2':    PGDL2,
     'drop':     PointDrop,
     'vanila':   VANILA,
-    'cw': CW,
-    'add': PointAdd,
-    'knn': KNN
+    'cw':       CW,
+    'add':      PointAdd,
+    'knn':      KNN
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
