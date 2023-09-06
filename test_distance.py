@@ -256,11 +256,6 @@ def test(args, io):
     denoised_layers_dict = {i:torch.tensor([]).view(0, input_num_dict[i], input_dim_dict[i]) for i in range(layer_len)}
     defended_layers_dict = {i:torch.tensor([]).view(0, input_num_dict[i], input_dim_dict[i]) for i in range(layer_len)}
     
-    # clean_layers_list = torch.tensor([]).view(0, *list(input_dim_dict.values()))
-    # attacked_layers_list = torch.tensor([]).view(0, *list(input_dim_dict.values()))
-    # denoised_layers_list = torch.tensor([]).view(0, *list(input_dim_dict.values()))
-    # defended_layers_list = torch.tensor([]).view(0, *list(input_dim_dict.values()))
-    
     # Number of point clouds to test the attack
     stop_iter = args.test_size // args.batch_size
     # stop_iter = 5
