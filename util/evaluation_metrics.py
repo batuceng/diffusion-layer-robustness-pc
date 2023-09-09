@@ -11,15 +11,16 @@ from tqdm.auto import tqdm
 
 
 _EMD_NOT_IMPL_WARNED = False
-def emd_approx(sample, ref):
+def emd_approx(sample, ref, verbose=True):
     global _EMD_NOT_IMPL_WARNED
     emd = torch.zeros([sample.size(0)]).to(sample)
     if not _EMD_NOT_IMPL_WARNED:
         _EMD_NOT_IMPL_WARNED = True
-        print('\n\n[WARNING]')
-        print('  * EMD is not implemented due to GPU compatability issue.')
-        print('  * We will set all EMD to zero by default.')
-        print('  * You may implement your own EMD in the function `emd_approx` in ./evaluation/evaluation_metrics.py')
+        if verbose:
+            print('\n\n[WARNING]')
+            print('  * EMD is not implemented due to GPU compatability issue.')
+            print('  * We will set all EMD to zero by default.')
+            print('  * You may implement your own EMD in the function `emd_approx` in ./evaluation/evaluation_metrics.py')
         print('\n')
     return emd
 
@@ -38,7 +39,7 @@ def distChamfer(a, b):
     return P.min(1)[0], P.min(2)[0]
 
 
-def EMD_CD(sample_pcs, ref_pcs, batch_size, reduced=True):
+def EMD_CD(sample_pcs, ref_pcs, batch_size, reduced=True, verbose=True):
     N_sample = sample_pcs.shape[0]
     N_ref = ref_pcs.shape[0]
     assert N_sample == N_ref, "REF:%d SMP:%d" % (N_ref, N_sample)
@@ -47,7 +48,7 @@ def EMD_CD(sample_pcs, ref_pcs, batch_size, reduced=True):
     emd_lst = []
     iterator = range(0, N_sample, batch_size)
 
-    for b_start in tqdm(iterator, desc='EMD-CD'):
+    for b_start in tqdm(iterator, desc='EMD-CD', disable=not verbose):
         b_end = min(N_sample, b_start + batch_size)
         sample_batch = sample_pcs[b_start:b_end]
         ref_batch = ref_pcs[b_start:b_end]
@@ -55,7 +56,7 @@ def EMD_CD(sample_pcs, ref_pcs, batch_size, reduced=True):
         dl, dr = distChamfer(sample_batch, ref_batch)
         cd_lst.append(dl.mean(dim=1) + dr.mean(dim=1))
 
-        emd_batch = emd_approx(sample_batch, ref_batch)
+        emd_batch = emd_approx(sample_batch, ref_batch, verbose=verbose)
         emd_lst.append(emd_batch)
 
     if reduced:

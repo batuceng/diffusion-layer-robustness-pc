@@ -108,7 +108,7 @@ def get_stats(labels, logits):
 def get_layer_distances(layerA, layerB, metrics):
     # ObjA Clean Pc, ObjB Denoised PC
     def get_distances(objA, objB, metrics=metrics):
-        l2dist, linfdist, cd = 0, 0, 0 
+        l2dist, linfdist, cd = torch.tensor([0], dtype=objA.dtype), torch.tensor([0], dtype=objA.dtype), 0 
         # L2
         if "L2" in metrics:
             l2dist = torch.norm((objA-objB), p=2, dim=0)
@@ -117,7 +117,7 @@ def get_layer_distances(layerA, layerB, metrics):
             linfdist = torch.norm((objA-objB), torch.inf, dim=0)
         # Chamfer
         if "CD" in metrics:
-            emd_cd = EMD_CD(objB, objA, batch_size=args.batch_size)
+            emd_cd = EMD_CD(objB, objA, batch_size=args.batch_size, verbose=False)
             cd, emd = emd_cd['MMD-CD'].item(), emd_cd['MMD-EMD'].item()
         return l2dist, linfdist, cd
     
@@ -127,9 +127,21 @@ def get_layer_distances(layerA, layerB, metrics):
         layer_dict[i] = [l2.mean().item(), linf.mean().item(), cd]
     return layer_dict
     
+# Convert np.inf & np.nan to str before json dump
+def convert_numpy_objects(dict_to_convert):
+    new = {}
+    for k, v in dict_to_convert.items():
+        if isinstance(v, dict):
+            new[k] = convert_numpy_objects(v)
+        else:
+            if isinstance(v, float) and (np.isnan(v) or np.isinf(v)):
+                new[k] = str(v)
+            else:
+                new[k] = v
+    return new
 
 def test(args, io):
-    test_loader = DataLoader(ModelNet40Attack(path=attaked_data_path),
+    test_loader = DataLoader(ModelNet40Attack(path=attaked_data_path), num_workers=8,
                             batch_size=args.batch_size, shuffle=False, drop_last=False)
     device = torch.device("cuda" if args.cuda else "cpu")
 
@@ -163,6 +175,10 @@ def test(args, io):
         raise Exception("Not implemented")
     model.eval()
     
+    attacked_num_dict = input_num_dict.copy()
+    if args.attack=="drop": attacked_num_dict[0]=824
+    if args.attack=="add": attacked_num_dict[0]=1224
+    
     # Autoencoders
     ae_list = []
     for i in range(5):
@@ -177,6 +193,7 @@ def test(args, io):
         ae_list.append(ae)
     denoiser = Multiple_Layer_Denoiser(models=ae_list, t_list=t_list)
     
+    # Create empty lists to keep all predictions
     num_classes = 40    
     clean_preds_list = torch.tensor([]).view(0,num_classes)
     attacked_preds_list = torch.tensor([]).view(0,num_classes)
@@ -184,11 +201,19 @@ def test(args, io):
     defended_preds_list = torch.tensor([]).view(0,num_classes)
     true_label_list = torch.tensor([]).view(0,1)
     
-    layer_len = len(list(filter(lambda x: x is not None, input_dim_dict.values())))
-    clean_layers_dict = {i:torch.tensor([]).view(0, input_num_dict[i], input_dim_dict[i]) for i in range(layer_len)}
-    attacked_layers_dict = {i:torch.tensor([]).view(0, input_num_dict[i], input_dim_dict[i]) for i in range(layer_len)}
-    denoised_layers_dict = {i:torch.tensor([]).view(0, input_num_dict[i], input_dim_dict[i]) for i in range(layer_len)}
-    defended_layers_dict = {i:torch.tensor([]).view(0, input_num_dict[i], input_dim_dict[i]) for i in range(layer_len)}
+    
+    # Dummy forward pass to get layer shapes
+    dummy_batch = next(iter(test_loader))
+    _, clean_layers = get_logits(dummy_batch['pointcloud'], model, dummy_batch['shift'], dummy_batch['scale'], device)
+    _, attacked_layers = get_logits(dummy_batch['attacked'], model, dummy_batch['shift'], dummy_batch['scale'], device)
+    # print([lay.shape for lay in clean_layers])
+    
+    # Create empty tensors to keep layer data(for distance measurements)
+    layer_len = len(clean_layers)
+    clean_layers_dict = {i:torch.tensor([]).view(0, layer_data.shape[2], layer_data.shape[1]) for i,layer_data in enumerate(clean_layers)}
+    attacked_layers_dict = {i:torch.tensor([]).view(0, layer_data.shape[2], layer_data.shape[1]) for i,layer_data in enumerate(attacked_layers)}
+    denoised_layers_dict = {i:torch.tensor([]).view(0, layer_data.shape[2], layer_data.shape[1]) for i,layer_data in enumerate(clean_layers)}
+    defended_layers_dict = {i:torch.tensor([]).view(0, layer_data.shape[2], layer_data.shape[1]) for i,layer_data in enumerate(attacked_layers)}
     
     # Number of point clouds to test the attack
     stop_iter = args.test_size // args.batch_size
@@ -237,7 +262,8 @@ def test(args, io):
     
     metrics = None
     if args.model=="pointnet": metrics = ["L2", "Linf"] # Skip CD for pointnet, it takes too long
-    else: metrics = ["L2", "Linf", "CD"] # Skip CD for pointnet, it takes too long
+    if args.attack in ["add","drop"]: metrics = [] # Cannot compute metrics due to different num of points
+    else: metrics = ["L2", "Linf", "CD"] # Otherwise, get all metrics
     
     attacked_dist = get_layer_distances(clean_layers_dict, attacked_layers_dict, metrics=metrics)
     denoised_dist = get_layer_distances(clean_layers_dict, denoised_layers_dict, metrics=metrics)
@@ -252,37 +278,50 @@ def test(args, io):
     
     result_dict = {}
     
+    sub_dict = {}
+    for i in range(layer_len):
+        sub_dict[f"Layer {i} distances"] = {"L2": attacked_dist[i][0], "Linf":attacked_dist[i][1], "CD": attacked_dist[i][2]}
+    result_dict[f"Clean-Attacked distances"] = sub_dict
+    
+    sub_dict = {}
+    for i in range(layer_len):
+        sub_dict[f"Layer {i} distances"] = {"L2": denoised_dist[i][0], "Linf":denoised_dist[i][1], "CD": denoised_dist[i][2]}
+    result_dict[f"Clean-Denoised distances"] = sub_dict
+        
+    sub_dict = {}
+    for i in range(layer_len):
+        sub_dict[f"Layer {i} distances"] = {"L2": defended_dist[i][0], "Linf":defended_dist[i][1], "CD": defended_dist[i][2]}
+    result_dict[f"Clean-Defended distances"] = sub_dict
+        
     print(f"\n T_List: {t_list} \n")
     print("Clean Acc:", clean_acc)
     print("Clean Loss:", clean_loss)
-    print("-"*30)
+    # print("-"*30)
     
-    print("Attacked dists")
-    for i in range(layer_len):
-        print(f"Layer {i}:", "L2:", attacked_dist[i][0], "Linf:", attacked_dist[i][1], "CD:", attacked_dist[i][2])
-        result_dict[f"Layer {i} distances"] = {"L2": attacked_dist[i][0], "Linf":attacked_dist[i][1], "CD": attacked_dist[i][2]}
-    print("Attacked Acc:", attacked_acc)
-    print("Attacked Loss:", attacked_loss)
-    print("-"*30)
+    # print("Attacked dists")
+    # for i in range(layer_len):
+    #     print(f"Layer {i}:", "L2:", attacked_dist[i][0], "Linf:", attacked_dist[i][1], "CD:", attacked_dist[i][2])
+    # print("Attacked Acc:", attacked_acc)
+    # print("Attacked Loss:", attacked_loss)
+    # print("-"*30)
     
-    print("Denoised dists")
-    for i in range(layer_len):
-        print(f"Layer {i}:", "L2:", denoised_dist[i][0], "Linf:", denoised_dist[i][1], "CD:", denoised_dist[i][2])
-        result_dict[f"Layer {i} distances"] = {"L2": denoised_dist[i][0], "Linf":denoised_dist[i][1], "CD": denoised_dist[i][2]}
-    print("Denoised Acc:", denoised_acc)
-    print("Denoised Loss:", denoised_loss)
-    print("-"*30)
+    # print("Denoised dists")
+    # for i in range(layer_len):
+    #     print(f"Layer {i}:", "L2:", denoised_dist[i][0], "Linf:", denoised_dist[i][1], "CD:", denoised_dist[i][2])
+    # print("Denoised Acc:", denoised_acc)
+    # print("Denoised Loss:", denoised_loss)
+    # print("-"*30)
     
-    print("Defended dists")
-    for i in range(layer_len):
-        print(f"Layer {i}:", "L2:", defended_dist[i][0], "Linf:", defended_dist[i][1], "CD:", defended_dist[i][2])
-        result_dict[f"Layer {i} distances"] = {"L2": defended_dist[i][0], "Linf":defended_dist[i][1], "CD": defended_dist[i][2]}
+    # print("Defended dists")
+    # for i in range(layer_len):
+    #     print(f"Layer {i}:", "L2:", defended_dist[i][0], "Linf:", defended_dist[i][1], "CD:", defended_dist[i][2])
     print("Defended Acc:", defended_acc)
     print("Defended Loss:", defended_loss)
     print()
     
     geo_mean = np.sqrt((denoised_acc**2 + defended_acc**2)/2)
     print("Geo-Mean Acc:", geo_mean)
+    print("-"*30)
     
     result_dict["Clean_loss"] = clean_loss
     result_dict["Attacked_loss"] = attacked_loss
@@ -308,7 +347,7 @@ def test(args, io):
     args_dict |= {"result_path":filename}
     args_dict |= result_dict
     with open(filename+'.json', 'w') as fp:
-        json.dump(args_dict, fp, indent=4)
+        json.dump(convert_numpy_objects(args_dict), fp, indent=4)
         fp.close()
 
 io = IOStream('outputs/' + args.exp_name + '/run.log')

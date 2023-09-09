@@ -1,17 +1,37 @@
 #!/bin/bash
 
-for i in {0..200..5}
-do python test_distance.py -t_list $i,0,0,0 --model dgcnn;
-done
+bs=256
+echo "model: $1, attack: $atck, batchsize: $bs";
 
-for j in {0..200..5}
-do python test_distance.py -t_list 0,$j,0,0 --model dgcnn;
-done
+for atck in "pgd" "pgdl2" "cw" "add" "knn" "drop";
+do
+    for l0 in {0..200..5}
+    do 
+        python test_distance.py -t_list $l0,0,0,0,0 --model $1 --attack $atck --batch-size $bs
+    done
 
-for k in {0..200..5}
-do python test_distance.py -t_list 0,0,$k,0 --model dgcnn;
-done
+    for l1 in {0..200..5}
+    do 
+        python test_distance.py -t_list 0,$1,0,0,0 --model $1 --attack $atck --batch-size $bs
+    done
 
-for l in {0..200..5}
-do python test_distance.py -t_list 0,0,0,$l --model dgcnn;
+    for l2 in {0..200..5}
+    do 
+        python test_distance.py -t_list 0,0,$l2,0,0 --model $1 --attack $atck --batch-size $bs
+    done
+
+    for l3 in {0..200..5}
+    do 
+        python test_distance.py -t_list 0,0,0,$l3,0 --model $1 --attack $atck --batch-size $bs
+    done
+
+    if [ "$1" = "pointnet" ] || [ "$1" = "pointnet2" ]
+    then
+        echo ""
+    else
+        for l4 in {0..200..5}
+        do 
+            python test_distance.py -t_list 0,0,0,0,$l4 --model $1 --attack $atck --batch-size $bs
+        done
+    fi
 done
