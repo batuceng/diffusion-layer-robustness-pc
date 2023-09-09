@@ -113,7 +113,7 @@ class Pct(nn.Module):
         feature = feature_0.permute(0, 2, 1)
         new_xyz, new_feature = sample_and_group(npoint=256, radius=0.2, nsample=32, xyz=new_xyz, points=feature) 
         feature_1 = self.gather_local_1(new_feature)
-        feature_1 = denoiser(feature_1, layer=1)
+        feature_1 = denoiser(feature_1, layer=2)
         layer_data.append(feature_1.clone().detach().requires_grad_(True))
 
         # PCT Layers (3 & 4)

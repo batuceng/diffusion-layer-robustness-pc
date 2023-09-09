@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 
 # Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-t_list', type=str, default='5,5,5,5,5')
+parser.add_argument('-t_list', type=str, default='0,0,0,0,0')
 
 parser.add_argument('--save-path', type=str, default='./dist_results')
 parser.add_argument('--device', type=str, default='cuda')
@@ -93,7 +93,7 @@ def get_logits(data, model, shift, scale, device, denoiser=Identity()):
     input = (data.to(device) * scale.view(-1,1,1).to(device) + shift.to(device)).detach().permute(0,2,1)
     model = model.to(device)
     logits, layers = model.forward_denoised(input, denoiser)
-    return logits.clone().detach().cpu(), [l.clone().detach().cpu() for l in layers]
+    return logits.clone().detach().cpu(), [l.clone().detach().cpu() for l in layers if l!=None]
 
 # Function to calc Accuracy & loss
 @torch.no_grad()
@@ -105,16 +105,20 @@ def get_stats(labels, logits):
 
 # Function to calc distances such as L2, Linf, Chamfer
 @torch.no_grad()
-def get_layer_distances(layerA, layerB):
+def get_layer_distances(layerA, layerB, metrics):
     # ObjA Clean Pc, ObjB Denoised PC
-    def get_distances(objA, objB):
+    def get_distances(objA, objB, metrics=metrics):
+        l2dist, linfdist, cd = 0, 0, 0 
         # L2
-        l2dist = torch.norm((objA-objB), p=2, dim=0)
+        if "L2" in metrics:
+            l2dist = torch.norm((objA-objB), p=2, dim=0)
         # Linf
-        linfdist = torch.norm((objA-objB), torch.inf, dim=0)
+        if "Linf" in metrics:
+            linfdist = torch.norm((objA-objB), torch.inf, dim=0)
         # Chamfer
-        metrics = EMD_CD(objB, objA, batch_size=args.batch_size)
-        cd, emd = metrics['MMD-CD'].item(), metrics['MMD-EMD'].item()
+        if "CD" in metrics:
+            emd_cd = EMD_CD(objB, objA, batch_size=args.batch_size)
+            cd, emd = emd_cd['MMD-CD'].item(), emd_cd['MMD-EMD'].item()
         return l2dist, linfdist, cd
     
     layer_dict = {}
@@ -134,7 +138,7 @@ def test(args, io):
     if args.model == 'pointnet2':
         model = PointNet2_cls().to(device)
         input_dim_dict = {0:3, 1:128, 2:256, 3:1024, 4:None}
-        input_num_dict = {0:1024, 1:512, 2:128, 3:128, 4:None}
+        input_num_dict = {0:1024, 1:512, 2:128, 3:1, 4:None}
     elif args.model == 'pointnet':
         model = PointNet_cls().to(device)
         input_dim_dict = {0:3, 1:64, 2:128, 3:1024, 4:None}
@@ -154,7 +158,7 @@ def test(args, io):
     elif args.model == 'pointmlp':
         model = PointMLP_cls().to(device)
         input_dim_dict = {0:3, 1:64, 2:128, 3:256, 4:512}
-        input_num_dict = {0:1024, 1:1024, 2:256, 3:128, 4:64}
+        input_num_dict = {0:1024, 1:1024, 2:512, 3:256, 4:128}
     else:
         raise Exception("Not implemented")
     model.eval()
@@ -191,7 +195,7 @@ def test(args, io):
     # stop_iter = 5
     
     for i, batch in enumerate(test_loader):
-        print(f"batch {i}/{len(test_loader)}")
+        # print(f"batch {i}/{len(test_loader)}")
         
         # Stop at specified batch number
         if i == stop_iter: break
@@ -202,11 +206,12 @@ def test(args, io):
         scale = batch['scale']
         label = batch["cate"]
         
-        # print(data.shape)
         # Prediction on original data
         clean_logits, clean_layers = get_logits(data, model, shift, scale, device)
         clean_preds_list = torch.cat((clean_preds_list, clean_logits), dim=0)
         for i in range(layer_len):
+            # print(clean_layers[i].transpose(1, 2).shape)
+            # print(clean_layers_dict[i].shape)
             clean_layers_dict[i] = torch.cat((clean_layers_dict[i], clean_layers[i].transpose(1, 2)), dim=0)
         
         # Prediction on attacked data
@@ -230,9 +235,13 @@ def test(args, io):
         # Label
         true_label_list = torch.cat((true_label_list, label), dim=0)
     
-    attacked_dist = get_layer_distances(clean_layers_dict, attacked_layers_dict)
-    denoised_dist = get_layer_distances(clean_layers_dict, denoised_layers_dict)
-    defended_dist = get_layer_distances(clean_layers_dict, defended_layers_dict)
+    metrics = None
+    if args.model=="pointnet": metrics = ["L2", "Linf"] # Skip CD for pointnet, it takes too long
+    else: metrics = ["L2", "Linf", "CD"] # Skip CD for pointnet, it takes too long
+    
+    attacked_dist = get_layer_distances(clean_layers_dict, attacked_layers_dict, metrics=metrics)
+    denoised_dist = get_layer_distances(clean_layers_dict, denoised_layers_dict, metrics=metrics)
+    defended_dist = get_layer_distances(clean_layers_dict, defended_layers_dict, metrics=metrics)
     
     # Print out Results
     clean_acc, clean_loss = get_stats(true_label_list, clean_preds_list)
@@ -287,7 +296,7 @@ def test(args, io):
     result_dict["Geo-Mean_acc"] = geo_mean
 
     
-    savedir = os.path.join(*[args.save_path, args.model, args.attack, "T__" + str("_".join([str(i) for i in t_list]))]) if args.save_path is not None else None
+    savedir = os.path.join(*[args.save_path, args.attack, args.model, "t__" + str("_".join([str(i) for i in t_list]))]) if args.save_path is not None else None
     filename = os.path.join(savedir, datetime.today().strftime('RESULT_%Y_%m_%d__%H_%M_%S')) if savedir is not None else None
     
     os.makedirs(savedir, exist_ok=True)
@@ -296,10 +305,10 @@ def test(args, io):
     with open(args.attaked_json_path, "r") as file:
         args_dict["attack_args"] = json.load(file)
     
-    args_dict |= {"data_path":filename}
+    args_dict |= {"result_path":filename}
     args_dict |= result_dict
     with open(filename+'.json', 'w') as fp:
-        json.dump(args_dict, fp)
+        json.dump(args_dict, fp, indent=4)
         fp.close()
 
 io = IOStream('outputs/' + args.exp_name + '/run.log')

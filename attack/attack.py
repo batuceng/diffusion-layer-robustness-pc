@@ -84,6 +84,6 @@ class Attack(object):
             if args != None:
                 with open(FILE_NAME+'.json', 'w') as fp:
                     args |= {"data_path": FILE_NAME, "clean_acc": clean_acc, "attack_acc": attack_acc}
-                    json.dump(args, fp)
+                    json.dump(args, fp, indent=4)
             
         return attacked_batches

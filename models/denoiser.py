@@ -44,13 +44,14 @@ class Multiple_Layer_Denoiser(nn.Module):
     def __init__(self, models:List[AutoEncoder], t_list:List[int]):
         super(Multiple_Layer_Denoiser, self).__init__()
         self.models = models
-        self.layers = [m.args.layer_no for m in models]
+        self.layers = [i for i in range(len(t_list))]
         self.t_list = t_list
     
     def forward(self, data:torch.tensor, layer:int) -> torch.tensor:
         if layer in self.layers:
             idx = self.layers.index(layer)
             model = self.models[idx]
+            if isinstance(model, Identity): return data
             if self.t_list[idx] != 0:
                 with torch.no_grad():
                     data = data.permute((0,2,1))
