@@ -18,3 +18,5 @@
 - [x] Add distance reports to test_distances.py
 - [x] Pull pretrained models from Uhem
 - [x] Implement test distance output to dist_results/{model_name}/{attack_name}/{t_list}/{timestamp}.json   Content --> Acc,dist,loss,args
+- [] Visually Check attack data
+- [] Get & Analyze results for denoising t steps
