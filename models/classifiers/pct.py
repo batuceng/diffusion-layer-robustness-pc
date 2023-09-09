@@ -186,8 +186,6 @@ class Point_Transformer_Last(nn.Module):
         x3 = self.sa3(x2)#torch.Size([16, 256, 256])
         x4 = self.sa4(x3)#torch.Size([16, 256, 256])
 
-        print(x1.shape,x2.shape,x3.shape,x4.shape)
-
         x = torch.cat((x1, x2, x3, x4), dim=1)
 
         return x
