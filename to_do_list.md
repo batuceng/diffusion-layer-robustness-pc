@@ -10,7 +10,7 @@
 - [x] Ours
 - [x] PointDP
 - [ ] If-defense
-- [ ] DUP-NET
+- [x] DUP-NET
 - [ ] SOR
 - [ ] SRS
 
