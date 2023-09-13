@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .pytorch_modules import SharedMLP
-from .pu_utils import square_distance, index_points, farthest_point_sample, \
+from pytorch_modules import SharedMLP
+from pu_utils import square_distance, index_points, farthest_point_sample, \
     QueryAndGroup, GroupAll
 
 

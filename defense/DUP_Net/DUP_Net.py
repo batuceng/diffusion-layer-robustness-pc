@@ -1,11 +1,14 @@
 import os
 import numpy as np
+import sys
 
 import torch
 import torch.nn as nn
 
-from .pu_net import PUNet
-from ..SOR_SRS.SOR import SORDefense
+sys.path.append("../")
+
+from pu_net import PUNet
+from SOR_SRS.SOR import SORDefense
 
 
 class DUPNet(nn.Module):
@@ -18,6 +21,8 @@ class DUPNet(nn.Module):
         self.sor = SORDefense(k=sor_k, alpha=sor_alpha)
         self.pu_net = PUNet(npoint=self.npoint, up_ratio=up_ratio,
                             use_normal=False, use_bn=False, use_res=False)
+        self.pu_net.load_state_dict(
+            torch.load("pu-in_1024-up_4.pth"))
 
     def process_data(self, pc, npoint=None):
         """Process point cloud data to be suitable for
@@ -34,7 +39,7 @@ class DUPNet(nn.Module):
         B = len(pc)
         proc_pc = torch.zeros((B, npoint, 3)).float().cuda()
         for pc_idx in range(B):
-            one_pc = pc[pc_idx]
+            one_pc = pc[pc_idx].cuda()
             # [N_i, 3]
             N = len(one_pc)
             if N > npoint:

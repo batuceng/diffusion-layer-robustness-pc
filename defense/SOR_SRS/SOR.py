@@ -29,7 +29,6 @@ class SORDefense(nn.Module):
             torch.FloatTensor: pc after outlier removal, [B, N, 3]
         """
         pc = x.clone().detach().double()
-        print(pc.shape)
         B, K = pc.shape[:2]
         pc = pc.transpose(2, 1)  # [B, 3, K]
         inner = -2. * torch.matmul(pc.transpose(2, 1), pc)  # [B, K, K]

@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from .pu_modules import PointnetSAModule, PointnetFPModule
-from .pytorch_modules import SharedMLP
+from pu_modules import PointnetSAModule, PointnetFPModule
+from pytorch_modules import SharedMLP
 
 
 class PUNet(nn.Module):
