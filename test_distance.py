@@ -275,9 +275,10 @@ def test(args, io):
     denoised_acc, denoised_loss = get_stats(true_label_list, denoised_preds_list)
     defended_acc, defended_loss = get_stats(true_label_list, defended_preds_list)
     
-    
+    # JSON Dump Dictionary
     result_dict = {}
     
+    # Layer Distances
     sub_dict = {}
     for i in range(layer_len):
         sub_dict[f"Layer {i} distances"] = {"L2": attacked_dist[i][0], "Linf":attacked_dist[i][1], "CD": attacked_dist[i][2]}
@@ -323,17 +324,26 @@ def test(args, io):
     print("Geo-Mean Acc:", geo_mean)
     print("-"*30)
     
+    # Losses
     result_dict["Clean_loss"] = clean_loss
     result_dict["Attacked_loss"] = attacked_loss
     result_dict["Denoised_loss"] = denoised_loss
     result_dict["Defended_loss"] = defended_loss
-    
+    # Accuracies
     result_dict["Clean_acc"] = clean_acc
     result_dict["Attacked_acc"] = attacked_acc
     result_dict["Denoised_acc"] = denoised_acc
     result_dict["Defended_acc"] = defended_acc
     result_dict["Geo-Mean_acc"] = geo_mean
 
+    # Save Predictions for each element
+    result_dict["Preds"] = {
+        "True_labels": true_label_list.squeeze().numpy(),
+        "Clean_preds": clean_preds_list.max(dim=1)[1].squeeze().numpy(),
+        "Attacked_preds": attacked_preds_list.max(dim=1)[1].squeeze().numpy(),
+        "Denoised_preds": denoised_preds_list.max(dim=1)[1].squeeze().numpy(),
+        "Defended_preds": defended_preds_list.max(dim=1)[1].squeeze().numpy(),
+    }
     
     savedir = os.path.join(*[args.save_path, args.attack, args.model, "t__" + str("_".join([str(i) for i in t_list]))]) if args.save_path is not None else None
     filename = os.path.join(savedir, datetime.today().strftime('RESULT_%Y_%m_%d__%H_%M_%S')) if savedir is not None else None
