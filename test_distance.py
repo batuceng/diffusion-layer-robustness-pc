@@ -136,6 +136,8 @@ def convert_numpy_objects(dict_to_convert):
         else:
             if isinstance(v, float) and (np.isnan(v) or np.isinf(v)):
                 new[k] = str(v)
+            elif isinstance(v, np.ndarray):
+                new[k] = v.tolist()
             else:
                 new[k] = v
     return new

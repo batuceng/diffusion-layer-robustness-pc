@@ -1,7 +1,6 @@
 import os
 import argparse
 import numpy as np
-from util.misc import seed_all
 import subprocess
 
 import warnings
@@ -34,7 +33,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 
 args = parser.parse_args()
-seed_all(args.seed)
+np.random.seed(args.seed)
 
 t_list_min = [int(i.strip()) for i in args.t_list_min.split(",")]
 t_list_max = [int(i.strip()) for i in args.t_list_max.split(",")]
@@ -67,7 +66,10 @@ while iter_count<args.iters:
     #Create command line
     t_list_str = f"-t_list {','.join(map(str, t_list))}"
     command = f"{cuda_str} python test_distance.py {t_list_str} {model_str} {attack_str} {batch_size_str} {test_size_str}"
+    print(command)
     # Exec Command
-    subprocess.run(command)
+    return_code = subprocess.call(command, shell=True)
+    
     # Increment counter
     iter_count += 1
+    print(f"Iter:{iter_count}, args:{model_str} {attack_str} {batch_size_str} {test_size_str}")
