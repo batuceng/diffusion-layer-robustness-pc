@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
 parser.add_argument('-t_list', type=str, default='0,0,0,0,0')
 
-parser.add_argument('--save-path', type=str, default='./dist_results')
+parser.add_argument('--save-path', type=str, default='./dist_results_maxvals')
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--exp-logs', type=str, default='experiment_logs')
 parser.add_argument('--test_size', type=int, default=np.inf)
@@ -143,7 +143,7 @@ def convert_numpy_objects(dict_to_convert):
     return new
 
 def test(args, io):
-    test_loader = DataLoader(ModelNet40Attack(path=attaked_data_path), num_workers=8,
+    test_loader = DataLoader(ModelNet40Attack(path=attaked_data_path), num_workers=4,
                             batch_size=args.batch_size, shuffle=False, drop_last=False)
     device = torch.device("cuda" if args.cuda else "cpu")
 

@@ -1,0 +1,2 @@
+t=[5, 5, 10, 60, 60], atk=cw, model=dgcnn, attacked_acc=0.0028, defended_acc=0.86
+t=[25, 25], atk=pgd, model=pointnet, attacked_acc=0.040, defended_acc=0.72
