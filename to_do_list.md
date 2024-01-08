@@ -9,10 +9,10 @@
 ### Defense
 - [x] Ours
 - [x] PointDP
-- [ ] If-defense
+- [x] If-defense
 - [x] DUP-NET
-- [ ] SOR
-- [ ] SRS
+- [x] SOR
+- [x] SRS
 
 ### Ours
 - [x] Add distance reports to test_distances.py

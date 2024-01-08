@@ -61,6 +61,7 @@ args.threshold = cfg['test']['threshold']
 args.input_npoint = cfg['data']['pointcloud_n']
 
 # Model
+print("Loaded model")
 model = config.get_model(cfg, device=device, dataset=None)
 model.load_state_dict(torch.load(cfg['test']['model_file']))
 
