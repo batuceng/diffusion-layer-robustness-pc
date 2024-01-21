@@ -26,11 +26,13 @@ class SRSDefense(nn.Module):
         Args:
             pc (torch.FloatTensor): batch input pc, [B, K, 3]
         """
+        print(pc.shape)
         B, K = pc.shape[:2]
         idx = [np.random.choice(K, K - self.drop_num,
                                 replace=False) for _ in range(B)]
         pc = torch.stack([pc[i][torch.from_numpy(
             idx[i]).long().to(pc.device)] for i in range(B)])
+        print(pc.shape)
         return pc
 
     def forward(self, x):

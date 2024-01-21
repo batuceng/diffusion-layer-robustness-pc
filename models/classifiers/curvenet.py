@@ -483,7 +483,6 @@ class CIC(nn.Module):
         self.lpfa = LPFA(planes, planes, k, mlp_num=mlp_num, initial=False)
 
     def forward(self, xyz, x):
- 
         # max pool
         if xyz.size(-1) != self.npoint:
             xyz, x = self.maxpool(
@@ -592,12 +591,29 @@ class CurveGrouping(nn.Module):
         # starting point selection in self attention style
         x_att = torch.sigmoid(self.att(x))
         x = x * x_att
-
+        
         _, start_index = torch.topk(x_att,
                                     self.curve_num,
                                     dim=2,
                                     sorted=False)
-        start_index = start_index.squeeze().unsqueeze(2)
+        
+        print("-"*10)
+        print(x_att.shape)
+        print(start_index.shape)
+        # start_index = start_index.squeeze().unsqueeze(2)
+        # print(start_index.shape)
+        if not start_index.shape[0] == 1:
+            start_index = start_index.squeeze()
+            # print("Squeezed shape:", start_index.shape)
+        else:
+            start_index = start_index.squeeze()
+            # print("Squeezed shape:", start_index.shape)
+            start_index = start_index.unsqueeze(0)
+            # print("Fixed shape:", start_index.shape)
+            
+        start_index = start_index.unsqueeze(2)
+        
+        print(start_index.shape)
 
         curves = self.walk(xyz, x, idx, start_index)  #bs, c, c_n, c_l
         

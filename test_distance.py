@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
 parser.add_argument('-t_list', type=str, default='0,0,0,0,0')
 
-parser.add_argument('--save-path', type=str, default='./dist_results_maxvals')
+parser.add_argument('--save-path', type=str, default='./dist_results_cw_knn')
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--exp-logs', type=str, default='experiment_logs')
 parser.add_argument('--test_size', type=int, default=np.inf)

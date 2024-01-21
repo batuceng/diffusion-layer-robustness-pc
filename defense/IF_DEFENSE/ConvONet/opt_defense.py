@@ -38,8 +38,8 @@ parser.add_argument('--init_sigma', type=float, default=0.01,
                     help='sigma for normal dist used in ori_init')
 parser.add_argument('--iterations', type=int, default=200,
                     help='Optimization iterations.')
-parser.add_argument('--batch_size', type=int, default=192,
-                    help='Batch process points.')
+# parser.add_argument('--batch_size', type=int, default=192,
+#                     help='Batch process points.')
 parser.add_argument('--lr', type=float, default=0.001,
                     help='lr in optimization')
 parser.add_argument('--rep_weight', type=float, default=500.,
@@ -51,6 +51,32 @@ parser.add_argument('--sor_k', type=int, default=2,
                     help='KNN in SOR')
 parser.add_argument('--sor_alpha', type=float, default=1.1,
                     help='Threshold = mean + alpha * std')
+
+parser.add_argument('--save-path', type=str, default='../../../data_defended')
+parser.add_argument('--device', type=str, default='cuda')
+parser.add_argument('--exp-logs', type=str, default='experiment_logs')
+parser.add_argument('--test_size', type=int, default=np.inf)
+
+# Datasets and loaders
+parser.add_argument('--batch-size', type=int, default=32)
+parser.add_argument('--scale-mode', type=str, default='shape_unit')
+
+parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
+                        help='Name of the experiment')
+parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+                    choices=['pointnet', 'pointnet2', 'dgcnn', 'curvenet', 'pct', 'pointmlp'],
+                    help='Model to use, [pointnet, pointnet2, dgcnn, curvenet, pct, pointmlp]')
+parser.add_argument('--num-points', type=int, default=1024,
+                        help='num of points to use, changes nothing currently')
+parser.add_argument('--no-cuda', type=bool, default=False,
+                    help='enables CUDA training')
+parser.add_argument('--seed', type=int, default=1, metavar='S',
+                    help='random seed (default: 1)')
+parser.add_argument('--attack', type=str, default="cw",
+                    choices=['add', 'cw', 'drop', 'knn', 'pgd', 'pgdl2'],)
+
+parser.add_argument('--attacked_data_folder', type=str, default="../../../data_attacked",
+                    help='path to attacked data folder, including json')
 
 args = parser.parse_args()
 cfg = config.load_config(args.config, 'configs/default.yaml')

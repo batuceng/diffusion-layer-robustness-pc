@@ -138,6 +138,7 @@ data_attacked/
 uhem_trained/
 dist_results/
 data_defended/
+data_defended_old/
 dist_results_maxvals/
 dist_results_pointdp/
 unused_scripts/cw

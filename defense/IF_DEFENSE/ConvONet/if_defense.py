@@ -16,41 +16,42 @@ from util.misc import IOStream, seed_all
 from dataset.modelnet40attack import ModelNet40Attack
 from models import DGCNN_cls, PointNet2_cls, PointNet_cls, PointMLP_cls, CurveNet_cls, PCT_cls
 
-from opt_defense import defend_point_cloud
+from opt_defense import defend_point_cloud, args
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
-# Arguments
-parser = argparse.ArgumentParser()
+# # Arguments
+# parser = argparse.ArgumentParser()
 
-parser.add_argument('--save-path', type=str, default='../../../data_defended')
-parser.add_argument('--device', type=str, default='cuda')
-parser.add_argument('--exp-logs', type=str, default='experiment_logs')
-parser.add_argument('--test_size', type=int, default=128)
+# parser.add_argument('--save-path', type=str, default='../../../data_defended')
+# parser.add_argument('--device', type=str, default='cuda')
+# parser.add_argument('--exp-logs', type=str, default='experiment_logs')
+# parser.add_argument('--test_size', type=int, default=128)
 
-# Datasets and loaders
-parser.add_argument('--batch-size', type=int, default=32)
-parser.add_argument('--scale-mode', type=str, default='shape_unit')
+# # Datasets and loaders
+# parser.add_argument('--batch-size', type=int, default=32)
+# parser.add_argument('--scale-mode', type=str, default='shape_unit')
 
-parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
-                        help='Name of the experiment')
-parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                    choices=['pointnet', 'pointnet2', 'dgcnn', 'curvenet', 'pct', 'pointmlp'],
-                    help='Model to use, [pointnet, pointnet2, dgcnn, curvenet, pct, pointmlp]')
-parser.add_argument('--num-points', type=int, default=1024,
-                        help='num of points to use, changes nothing currently')
-parser.add_argument('--no-cuda', type=bool, default=False,
-                    help='enables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--attack', type=str, default="cw",
-                    choices=['add', 'cw', 'drop', 'knn', 'pgd', 'pgdl2'],)
+# parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
+#                         help='Name of the experiment')
+# parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+#                     choices=['pointnet', 'pointnet2', 'dgcnn', 'curvenet', 'pct', 'pointmlp'],
+#                     help='Model to use, [pointnet, pointnet2, dgcnn, curvenet, pct, pointmlp]')
+# parser.add_argument('--num-points', type=int, default=1024,
+#                         help='num of points to use, changes nothing currently')
+# parser.add_argument('--no-cuda', type=bool, default=False,
+#                     help='enables CUDA training')
+# parser.add_argument('--seed', type=int, default=1, metavar='S',
+#                     help='random seed (default: 1)')
+# parser.add_argument('--attack', type=str, default="cw",
+#                     choices=['add', 'cw', 'drop', 'knn', 'pgd', 'pgdl2'],)
 
-parser.add_argument('--attacked_data_folder', type=str, default="../../../data_attacked",
-                    help='path to attacked data folder, including json')
-args = parser.parse_args()
+# parser.add_argument('--attacked_data_folder', type=str, default="../../../data_attacked",
+#                     help='path to attacked data folder, including json')
+
+# args = parser.parse_args()
 seed_all(args.seed)
 
 model_dict = {
@@ -154,7 +155,7 @@ for i, batch in enumerate(test_loader):
         
     # Defensive Prediction on attacked data
     defended_data = defense_model(data_attack.clone().cpu().numpy())
-    defended_data_list.append(defended_data)
+    defended_data_list.append(torch.from_numpy(defended_data))
     defended_data = torch.from_numpy(defended_data).to(args.device)
     defended_logits = get_logits(defended_data, model, shift, scale, device)
     defended_preds_list = torch.cat((defended_preds_list, defended_logits), dim=0)

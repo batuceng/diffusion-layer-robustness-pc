@@ -137,7 +137,7 @@ true_label_list = torch.tensor([]).view(0,1)
 
 stop_iter = args.test_size // args.batch_size
 # stop_iter = 5
-    
+
 for i, batch in enumerate(test_loader):
     print(f"batch {i}/{len(test_loader)}")
     
@@ -150,6 +150,8 @@ for i, batch in enumerate(test_loader):
     scale = batch['scale']
     label = batch["cate"]
     
+    print(data.shape)
+    
     # Prediction on original data
     clean_logits = get_logits(data, model, shift, scale, device)
     clean_preds_list = torch.cat((clean_preds_list, clean_logits), dim=0)
@@ -160,13 +162,13 @@ for i, batch in enumerate(test_loader):
     
     # Defensive Prediction on original data
     denoised_data = defense_model(data)
-    denoised_data = [i.unsqueeze(0) for i in denoised_data]
+    denoised_data = torch.cat([i.unsqueeze(0) for i in denoised_data])
     denoised_logits = get_logits(denoised_data, model, shift, scale, device)
     denoised_preds_list = torch.cat((denoised_preds_list, denoised_logits), dim=0)
         
     # Defensive Prediction on attacked data
     defended_data = defense_model(data_attack)
-    defended_data = [i.unsqueeze(0) for i in defended_data]
+    defended_data = torch.cat([i.unsqueeze(0) for i in defended_data])
     defended_logits = get_logits(defended_data, model, shift, scale, device)
     defended_preds_list = torch.cat((defended_preds_list, defended_logits), dim=0)
     

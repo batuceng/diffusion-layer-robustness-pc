@@ -28,6 +28,7 @@ class SORDefense(nn.Module):
         Returns:
             torch.FloatTensor: pc after outlier removal, [B, N, 3]
         """
+        print(x.shape)
         pc = x.clone().detach().double()
         B, K = pc.shape[:2]
         pc = pc.transpose(2, 1)  # [B, 3, K]
@@ -44,6 +45,8 @@ class SORDefense(nn.Module):
         threshold = mean + self.alpha * std  # [B]
         bool_mask = (value <= threshold[:, None])  # [B, K]
         sel_pc = [x[i][bool_mask[i]] for i in range(B)]
+        for pc in sel_pc:
+            print(pc.shape)
         return sel_pc
 
     def forward(self, x):

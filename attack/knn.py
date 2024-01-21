@@ -114,9 +114,9 @@ class KNN(Attack):
         one_hot_labels = torch.eye(outputs.shape[1]).to(self.device)[labels]
 
         # find the max logit other than the target class
-        other = torch.max((1-one_hot_labels)*outputs, dim=1)[0]
+        other = torch.max((1-one_hot_labels)*outputs - one_hot_labels*10000, dim=1)[0]
         # get the target class's logit
-        real = torch.max(one_hot_labels*outputs, dim=1)[0]
+        real = torch.masked_select(outputs, one_hot_labels.bool())
 
         if self.targeted:
             # return torch.clamp((other-real), min=-self.kappa)
