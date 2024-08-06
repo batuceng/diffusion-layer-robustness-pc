@@ -25,16 +25,10 @@ The official repository for the titled preprint: [[`arxiv`](https://arxiv.org/pd
   </div>
 </div> -->
 
-<!-- <style>
-td, th {
-   border: none!important;
-}
-</style> -->
-
 <table>
   <tr>
-    <td><img src="assets/pcld-mainfig1.png" alt="fig1" width="88%" height="auto" style="border: none!important"></td>
-    <td><img src="assets/pcld-mainfig2.png" alt="fig2" width="100%" height="auto" style="border: none!important"></td>
+    <td style="border: none!important"><img src="assets/pcld-mainfig1.png" alt="fig1" width="88%" height="auto"></td>
+    <td><img src="assets/pcld-mainfig2.png" alt="fig2" width="100%" height="auto"></td>
   </tr>
 </table>
 
