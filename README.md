@@ -26,7 +26,7 @@ The official repository for the titled preprint: [[`arxiv`](https://arxiv.org/pd
 </div> -->
 
 <table>
-  <tr>
+  <tr style="border: none!important">
     <td style="border: none!important"><img src="assets/pcld-mainfig1.png" alt="fig1" width="88%" height="auto"></td>
     <td><img src="assets/pcld-mainfig2.png" alt="fig2" width="100%" height="auto"></td>
   </tr>
